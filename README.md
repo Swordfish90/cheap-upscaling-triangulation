@@ -2,10 +2,10 @@
 
 Cheap Upscaling Triangulation (CUT) is a simple, single-image upscaling algorithm for retro games designed to be:
 
-* **Versatile**: it can upscale from and to any image resolution and is applicable to all the 2D and 3D consoles that Lemuroid supports
+* **Versatile**: it can upscale from and to any image resolution and is applicable to all the 2D and 3D consoles that [Lemuroid](https://github.com/Swordfish90/Lemuroid) supports
 * **Efficient**: battery consumption is very critical on mobile devices, so it leverages the GPU and keeps the number of samples and calculations as low as possible
 
-In order to achieve this, we need to **CUT some corners**... Literally...
+In order to achieve this, we need to **CUT some corners**... Literally!
 
 ## Algorithm
 
@@ -41,7 +41,7 @@ When looking at 8-bit Pixel-Art, we definitely want these edges to be as sharp a
 
 CUT tries to solve this by measuring local contrast using the [Michelson formula](https://en.wikipedia.org/wiki/Contrast_(vision)#Michelson_contrast) on the input pixels and adjusts the interpolation function to produce sharper edges where the contrast is high and smoother edges where it's low.
 
-This increases the perceived resolution on edges, limiting noise or bands in gradients. These sharpness values can be tailored to the displayed content.
+This increases the perceived resolution on edges, limiting noise or bands in gradients. These sharpness values can be tailored to the content displayed.
 
 |Input|CUT (Static Sharpness)|CUT (Dynamic Sharpness)|
 |---|---|---|
@@ -50,7 +50,7 @@ This increases the perceived resolution on edges, limiting noise or bands in gra
 ## Implementation
 
 The implementation is provided as a GLSL shader, and it comes with a couple of useful optimizations:
-* Instead of computing barycentric coordinates for the two triangles of each of the two triangulation, we move coordinates and points so that only one is computed for each output fragment
+* Instead of computing barycentric coordinates for the two triangles of each of the two triangulation, we move coordinates and points so that only one is calculated for each output fragment
 * Instead of computing the luminosity of each input pixel, we take the green channel, which provides a good enough estimate and saves us four dot products
 
 The shader exposes a few parameters which can be used to customize the behaviour:
