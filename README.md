@@ -86,4 +86,5 @@ CRT (Lemuroid) | ~1.0% | 1080p | --
 **CUT (Lemuroid)** | **~1.5%** | **1080p** | --
 HQx2 (Retroarch) | ~1.5% | 320p | Fixed Resolution Increase of 2x
 HQx4 (Retroarch) | ~2.5% | 640p | Fixed Resolution Increase of 4x
+xbrz-freescale-multipass (Retroarch) | ~6.0% | 1080p | Best image quality on 2D content
 xbrz-freescale (Retroarch) | ~15% | 1080p | Best image quality on 2D content
