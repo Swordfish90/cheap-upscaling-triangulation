@@ -39,7 +39,7 @@ Changing the interpolation function provides different levels of sharpness. You 
 
 When looking at 8-bit Pixel-Art, we definitely want these edges to be as sharp as possible, but as we start moving to 16-bit, gradients and bitmaps start to look noisy.
 
-CUT tries to solve this by measuring local contrast using the [Michelson formula](https://en.wikipedia.org/wiki/Contrast_(vision)#Michelson_contrast) on the input pixels and adjusts the interpolation function to produce sharper edges when the contrast is high and smoother edges when it's low.
+CUT tries to solve this by measuring local contrast using the [Michelson formula](https://en.wikipedia.org/wiki/Contrast_(vision)#Michelson_contrast) on the input pixels and adjusts the interpolation function to produce sharper edges where the contrast is high and smoother edges where it's low.
 
 This increases the perceived resolution on edges, limiting noise or bands in gradients. These sharpness values can be tailored to the displayed content.
 
