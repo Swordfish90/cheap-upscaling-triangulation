@@ -3,7 +3,7 @@
 Cheap Upscaling Triangulation (CUT) is a simple, single-image upscaling algorithm for retro games designed to be:
 
 * **Versatile**: it can upscale from and to any image resolution and is applicable to all the 2D and 3D consoles that Lemuroid supports
-* **Efficient**: battery consumption is very critical on mobile devices, so it leverages the GPU as much as possible and keeps the number of samples and calculations as low as possible
+* **Efficient**: battery consumption is very critical on mobile devices, so it leverages the GPU and keeps the number of samples and calculations as low as possible
 
 In order to achieve this, we need to **CUT some corners**... Literally...
 
