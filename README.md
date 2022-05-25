@@ -7,19 +7,19 @@ Cheap Upscaling Triangulation (CUT) is a simple, single-image upscaling algorith
 
 In order to achieve this, we need to **CUT some corners**... Literally!
 
-## Algorithm
-
 ### The Intuition
 
-The first [Pixel-Art scaling algorithms](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms) were cutting corners of input pixels when the two neighbors had the same colors. This smoothed out 45° and 135° straight lines increasing the perceived resolution. Can we extend the idea in continuous space and make it fast?
+The first [Pixel-Art scaling algorithms](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms) were cutting corners of input pixels when the two diagonal neighbors had the same color. This smoothed out 45° and 135° straight lines increasing the perceived resolution. Can we extend the idea in continuous space and make it fast?
 
-The first implementation of CUT was actually doing this, but it started to show its limits with newer consoles. The solution needed to be more generic.
+The first implementation of CUT was actually doing this, but it started to show its limits with newer consoles. The solution needed to be more general.
+
+## Algorithm
 
 ### Triangulation
 
 Triangulation is often used when upscaling images. In CUT, for each output pixel, we sample the 2x2 neighborhood and, compute the luminance of these four input pixels.
 
-When the difference in luminosity on one diagonal is much smaller compared to the other, we cut the pixel on that diagonal, creating two triangles.
+When the difference in luminance on one diagonal is much smaller compared to the other, we cut the pixel on that diagonal, creating two triangles.
 
 |Input Image|Triangulated Pixels|Chosen Triangulation|
 |---|---|---|
@@ -50,8 +50,8 @@ This increases the perceived resolution on edges, limiting noise or bands in gra
 ## Implementation
 
 The implementation is provided as a GLSL shader, and it comes with a couple of useful optimizations:
-* Instead of computing barycentric coordinates for the two triangles of each of the two triangulation, we move coordinates and points so that only one is calculated for each output fragment
-* Instead of computing the luminosity of each input pixel, we take the green channel, which provides a good enough estimate and saves us four dot products
+* Instead of computing barycentric coordinates for the two triangles of each of the two triangulations, we move coordinates and points so that only one is calculated for each output fragment
+* Instead of computing the luminance of each input pixel, we take the green channel, which provides a good enough estimate and saves us four dot products
 
 The shader exposes a few parameters which can be used to customize the behaviour:
 
