@@ -1,6 +1,6 @@
 # CUT2
 
-In CUT2, we sample a 4x4 window without the corners and we extract their luma value.
+We sample a 4x4 window without the corners and we extract their luma value.
 
 ```
        P01 -- P02
