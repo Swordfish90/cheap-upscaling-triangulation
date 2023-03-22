@@ -30,6 +30,23 @@ Here you can find some results. On the left you can see the input image, while o
 ![](images/final/cut2/cut2-screen-04.jpg) | ![](images/final/cut2/cut2-screen-05.jpg) | ![](images/final/cut2/cut2-screen-06.jpg)
 ![](images/final/cut2/cut2-screen-07.jpg) | ![](images/final/cut2/cut2-screen-08.jpg) | ![](images/final/cut2/cut2-screen-09.jpg)
 
+## Configuration
+
+The look of both CUT algorithms can be fine-tuned with a set of parameters:
+
+```
+#define USE_DYNAMIC_BLEND 1          // Dynamically blend color with respect to contrast
+#define BLEND_MIN_CONTRAST_EDGE 0.0  // Minimum contrast level at which sharpness starts increasing [0, 1]
+#define BLEND_MAX_CONTRAST_EDGE 1.0  // Maximum contrast level at which sharpness stops increasing [0, 1]
+#define BLEND_MIN_SHARPNESS 0.0      // Minimum sharpness level [0, 1]
+#define BLEND_MAX_SHARPNESS 1.0      // Maximum sharpness level [0, 1]
+#define STATIC_BLEND_SHARPNESS 0.5   // Sharpness level used when dynamic blending is disabled [0, 1]
+#define EDGE_USE_FAST_LUMA 0         // Use quick luma approximation in edge detection
+#define EDGE_MIN_VALUE 0.05          // Minimum luma difference used in edge detection [0, 1]
+#define EDGE_MIN_CONTRAST 1.20       // Minimum contrast ratio used in edge detection [1, ∞]
+#define LUMA_ADJUST_GAMMA 0          // Correct gamma to better approximate luma human perception
+```
+
 ## Performances
 
 There aren't yet extensive performance tests, but I tried measuring GPU load on my device, a Galaxy S21 FE with Snapdragon 888 playing Final Fantasy VI Advance.

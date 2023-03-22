@@ -1,6 +1,6 @@
 # CUT
 
-In CUT, we sample a 2x2 window and we extract their luma value.
+We sample a 2x2 window. To make it more efficient, we're only going to look at the luma plane.
 
 ```
 P05 -- P06
@@ -8,32 +8,117 @@ P05 -- P06
 P09 -- P10
 ```
 
+## Luma extraction
+
+For each pixel, we extract the luma value with the following:
+
+```
+lowp float luma(lowp vec3 v) {
+#if EDGE_USE_FAST_LUMA
+  lowp float result = v.g;
+#else
+  lowp float result = dot(v, vec3(0.299, 0.587, 0.114));
+#endif
+#if LUMA_ADJUST_GAMMA
+  result = sqrt(result);
+#endif
+  return result;
+}
+```
+
+By using ```EDGE_USE_FAST_LUMA```, you can make this step faster by simply relying on the green channel as an approximation.
+You can also use ```LUMA_ADJUST_GAMMA``` if you want a more accurate representation of what the human perception is.
+
 ## Edge detection
 
-Using this window, we are able to detected only edges of 45°.
+Using this window, we are able to detected only edges of 45°:
+
+```
+A -- B
+|    |
+C -- D
+```
 
 We detect an edge when the luma difference on one diagonal is much smaller compared to the other.
 
+```
+bool hasEdge(lowp float a, lowp float b, lowp float c, lowp float d) {
+  return max(distance(a, d) * EDGE_MIN_CONTRAST, EDGE_MIN_VALUE) < distance(b, c);
+}
+```
+
 ## Triangulation / Pattern Recognition
 
-Let's keep focusing on the center square.
+Let's now focus on the center square:
 
-If we ignore symmetries and consider the edges we detected in the previous step, we're basically guaranteed to fall into one of these patterns:
+```
+P05 -- P06
+|       |
+P09 -- P10
+```
+
+Considering the edges that we found in the previous step and ignoring symmetries, we're basically guaranteed to fall into one of these patterns: 
 
 |||
 |---|---|
-![](../images/algorithm/cut2-patterns/0.svg) | ![](../images/algorithm/cut2-patterns/1.svg)
+![](../images/algorithm/patterns/0.svg) | ![](../images/algorithm/patterns/1.svg)
+
+The other split scenario can be transformed by flipping the image on the ```x = 0.5``` axis.
+
+For each pattern, we defined a set of rules that will choose a shape and two segments on which we'll perform the interpolation:
+
+```
+struct Pixels {
+  lowp vec3 p0;
+  lowp vec3 p1;
+  lowp vec3 p2;
+  lowp vec3 p3;
+};
+
+struct Pattern {
+  Pixels pixels;
+  bool triangle;
+  lowp vec2 coords;
+};
+```
+
+Here the segments are ```P0-P1``` and ```P2-P3```.
 
 ## Interpolation
 
-We are now left with a set of triangles and quads that we need to interpolate.
+Let's now assume we have ```blend(A, B, t)``` function that mixes two colors given an interpolation parameter.
 
-Using the center square pixels and the current coordinates, we apply the symmetry transformations found in the previous step.
+We can simply use the output of the previous step to perform a bilinear interpolation on the two segments we found earlier:
 
-For each pattern, we defined a set of rules that will output two line segments with associated colors from the center square at the extremities.
+```
+lowp vec3 weights = pattern.triangle ? triangle(pattern.coords) : quad(pattern.coords);
 
-We can now assume we have a blend function ```blend(A, B, t)``` that mixes the colors, given a parameter representing the relative distance between the two points.
+lowp vec3 final = blend(
+  blend(pattern.pixels.p0, pattern.pixels.p1, weights.x),
+  blend(pattern.pixels.p2, pattern.pixels.p3, weights.y),
+  weights.z
+);
+```
 
-For every point of our figure, we are now able to find the projection on those segments and compute the color using the ```blend``` function.
+The goal is to have smooth gradients and sharp edges, so we can define the ```blend(A, B, t)``` function as something that looks like a step when the contrast is high, and a linear interpolation when it's low.
 
-If ```blend``` is defined as the simple interpolation formula, we'll inevitably blur the colors. We want edge to be sharp and gradients to be smooth. To achieve that, we can use a function that behaves as a step if the difference in luma is high and fall back to linear interpolation when it's low.
+```
+lowp float linearStep(lowp float edge0, lowp float edge1, lowp float t) {
+  return clamp((t - edge0) / (edge1 - edge0 + EPSILON), 0.0, 1.0);
+}
+
+lowp float sharpSmooth(lowp float t, lowp float sharpness) {
+  return linearStep(sharpness, 1.0 - sharpness, t);
+}
+
+lowp float sharpness(lowp float l1, lowp float l2) {
+  lowp float lumaDiff = abs(l1 - l2);
+  lowp float contrast = linearStep(BLEND_MIN_CONTRAST_EDGE, BLEND_MAX_CONTRAST_EDGE, lumaDiff);
+  lowp float result = mix(BLEND_MIN_SHARPNESS * 0.5, BLEND_MAX_SHARPNESS * 0.5, contrast);
+  return result;
+}
+
+lowp vec3 blend(lowp vec3 a, lowp vec3 b, lowp float t) {
+  return mix(a, b, sharpSmooth(t, sharpness(luma(a), luma(b))));
+}
+```
