@@ -16,7 +16,7 @@ P08 -- P09 -- P10 -- P11
 
 For each pixel, we extract the luma value with the following:
 
-```
+```glsl
 lowp float luma(lowp vec3 v) {
 #if EDGE_USE_FAST_LUMA
   lowp float result = v.g;
@@ -30,8 +30,8 @@ lowp float luma(lowp vec3 v) {
 }
 ```
 
-By using ```EDGE_USE_FAST_LUMA```, you can make this step faster by simply relying on the green channel as an approximation.
-You can also use ```LUMA_ADJUST_GAMMA``` if you want a more accurate representation of what the human perception is.
+By using ```EDGE_USE_FAST_LUMA```, we can make this step faster by simply relying on the green channel as an approximation.
+We can also use ```LUMA_ADJUST_GAMMA``` if we want a more accurate representation of what the human perception is.
 
 ## Edge detection
 
@@ -57,7 +57,7 @@ This block can have two edges: ```AF``` or ```BE```. We're going to define a fun
 
 Since the extremes can belong to either the left or the right sub-triangles we need to keep track of it. This information will later be used to choose on which colors we're going to interpolate.
 
-```
+```glsl
 bvec2 hasEdge(lowp float a, lowp float b, lowp float c, lowp float d, lowp float e, lowp float f) {
   lowp float dab = distance(a, b);
   lowp float dac = distance(a, c);
@@ -93,7 +93,7 @@ C -- D
 
 Using a similar reasoning, we can detect an edge when ```A``` and ```D``` are similar to each other, but much different from either ```B``` or ```C```.
 
-```
+```glsl
 bool hasEdge(lowp float a, lowp float b, lowp float c, lowp float d) {
   lowp float diff1 = distance(a, d);
   lowp float diff2 = max(
@@ -106,8 +106,7 @@ bool hasEdge(lowp float a, lowp float b, lowp float c, lowp float d) {
 
 Detecting both edges leads to a valid saddle scenario. We can discriminate between the two by considering the neighborhood and align to the stronger diagonal:
 
-```
-// Saddle fix
+```glsl
 if (d05_10 && d06_09) {
   lowp float diff1 = distance(l06, l01) + distance(l11, l06) + distance(l09, l04) + distance(l14, l09);
   lowp float diff2 = distance(l05, l02) + distance(l08, l05) + distance(l10, l07) + distance(l13, l10);
@@ -140,7 +139,7 @@ Every other scenario can be transformed into one of the previous by flipping it 
 
 For each pattern, we defined a set of rules that will choose a shape and two segments on which we'll perform the interpolation:
 
-```
+```glsl
 struct Pixels {
   lowp vec3 p0;
   lowp vec3 p1;
@@ -163,7 +162,7 @@ Let's now assume we have ```blend(A, B, t)``` function that mixes two colors giv
 
 We can simply use the output of the previous step to perform a bilinear interpolation on the two segments we found earlier:
 
-```
+```glsl
 lowp vec3 weights = pattern.triangle ? triangle(pattern.coords) : quad(pattern.coords);
 
 lowp vec3 final = blend(
@@ -175,7 +174,7 @@ lowp vec3 final = blend(
 
 The goal is to have smooth gradients and sharp edges, so we can define the ```blend(A, B, t)``` function as something that looks like a step when the contrast is high, and a linear interpolation when it's low.
 
-```
+```glsl
 lowp float linearStep(lowp float edge0, lowp float edge1, lowp float t) {
   return clamp((t - edge0) / (edge1 - edge0 + EPSILON), 0.0, 1.0);
 }
@@ -195,3 +194,13 @@ lowp vec3 blend(lowp vec3 a, lowp vec3 b, lowp float t) {
   return mix(a, b, sharpSmooth(t, sharpness(luma(a), luma(b))));
 }
 ```
+
+## Results
+
+Here we can find some results. On the left we can see the input image, while on the right the image processed with **CUT2**.
+
+||||
+|---|---|---|
+![](../images/final/cut2/cut2-screen-01.jpg) | ![](../images/final/cut2/cut2-screen-02.jpg) | ![](../images/final/cut2/cut2-screen-03.jpg)
+![](../images/final/cut2/cut2-screen-04.jpg) | ![](../images/final/cut2/cut2-screen-05.jpg) | ![](../images/final/cut2/cut2-screen-06.jpg)
+![](../images/final/cut2/cut2-screen-07.jpg) | ![](../images/final/cut2/cut2-screen-08.jpg) | ![](../images/final/cut2/cut2-screen-09.jpg)

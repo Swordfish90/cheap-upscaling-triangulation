@@ -12,7 +12,7 @@ P09 -- P10
 
 For each pixel, we extract the luma value with the following:
 
-```
+```glsl
 lowp float luma(lowp vec3 v) {
 #if EDGE_USE_FAST_LUMA
   lowp float result = v.g;
@@ -26,8 +26,8 @@ lowp float luma(lowp vec3 v) {
 }
 ```
 
-By using ```EDGE_USE_FAST_LUMA```, you can make this step faster by simply relying on the green channel as an approximation.
-You can also use ```LUMA_ADJUST_GAMMA``` if you want a more accurate representation of what the human perception is.
+By using ```EDGE_USE_FAST_LUMA```, we can make this step faster by simply relying on the green channel as an approximation.
+We can also use ```LUMA_ADJUST_GAMMA``` if we want a more accurate representation of what the human perception is.
 
 ## Edge detection
 
@@ -41,7 +41,7 @@ C -- D
 
 We detect an edge when the luma difference on one diagonal is much smaller compared to the other.
 
-```
+```glsl
 bool hasEdge(lowp float a, lowp float b, lowp float c, lowp float d) {
   return max(distance(a, d) * EDGE_MIN_CONTRAST, EDGE_MIN_VALUE) < distance(b, c);
 }
@@ -67,7 +67,7 @@ The other split scenario can be transformed by flipping the image on the ```x = 
 
 For each pattern, we defined a set of rules that will choose a shape and two segments on which we'll perform the interpolation:
 
-```
+```glsl
 struct Pixels {
   lowp vec3 p0;
   lowp vec3 p1;
@@ -90,7 +90,7 @@ Let's now assume we have ```blend(A, B, t)``` function that mixes two colors giv
 
 We can simply use the output of the previous step to perform a bilinear interpolation on the two segments we found earlier:
 
-```
+```glsl
 lowp vec3 weights = pattern.triangle ? triangle(pattern.coords) : quad(pattern.coords);
 
 lowp vec3 final = blend(
@@ -102,7 +102,7 @@ lowp vec3 final = blend(
 
 The goal is to have smooth gradients and sharp edges, so we can define the ```blend(A, B, t)``` function as something that looks like a step when the contrast is high, and a linear interpolation when it's low.
 
-```
+```glsl
 lowp float linearStep(lowp float edge0, lowp float edge1, lowp float t) {
   return clamp((t - edge0) / (edge1 - edge0 + EPSILON), 0.0, 1.0);
 }
@@ -122,3 +122,11 @@ lowp vec3 blend(lowp vec3 a, lowp vec3 b, lowp float t) {
   return mix(a, b, sharpSmooth(t, sharpness(luma(a), luma(b))));
 }
 ```
+
+## Results
+
+Here we can find some results. On the left we can see the input image, while on the right the image processed with **CUT**.
+
+||||
+|---|---|---|
+![](../images/final/cut1/cut1-screen-01.jpg) | ![](../images/final/cut1/cut1-screen-02.jpg) | ![](../images/final/cut1/cut1-screen-03.jpg)
