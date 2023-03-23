@@ -125,8 +125,7 @@ lowp vec3 blend(lowp vec3 a, lowp vec3 b, lowp float t) {
 
 ## Results
 
-Here we can find some results. On the left we can see the input image, while on the right the image processed with **CUT**.
-
+Here you can find some results. Each image is split in two, with the left side unprocessed and the right side with **CUT1** applied.
 ||||
 |---|---|---|
 ![](../images/final/cut1/cut1-screen-01.jpg) | ![](../images/final/cut1/cut1-screen-02.jpg) | ![](../images/final/cut1/cut1-screen-03.jpg)
