@@ -1,90 +1,63 @@
 # Cheap Upscaling Triangulation
 
-Cheap Upscaling Triangulation (CUT) is a simple, single-image upscaling algorithm for retro games designed to be:
+Cheap Upscaling Triangulation (CUT) is a family of single-image upscaling algorithms for retro games designed to be:
 
-* **Versatile**: it can upscale from and to any image resolution and is applicable to all the 2D and 3D consoles that [Lemuroid](https://github.com/Swordfish90/Lemuroid) supports
-* **Efficient**: battery consumption is very critical on mobile devices, so it leverages the GPU and keeps the number of samples and calculations as low as possible
+* **Versatile**: can upscale from and to any image resolution and are applicable to all the 2D and 3D consoles that [Lemuroid](https://github.com/Swordfish90/Lemuroid) supports
+* **Efficient**: keep the number of samples and calculations as low as possible to minimize battery consumption
 
 In order to achieve this, we need to **CUT some corners**... Literally!
 
-### The Intuition
+## Algorithms
 
-The first [Pixel-Art scaling algorithms](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms) were cutting corners of input pixels when the two diagonal neighbors had the same color. This smoothed out 45° and 135° straight lines increasing the perceived resolution. Can we extend the idea in continuous space and make it fast?
+The family is composed of two algorithms **[CUT1](/algorithms/cut1.md)** and **[CUT2](/algorithms/cut2.md)**, which share the same basic steps:
 
-The first implementation of CUT was actually doing this, but it started to show its limits with newer consoles. The solution needed to be more general.
+* Edge Detection
+* Triangulation / Pattern Recognition
+* Interpolation
 
-## Algorithm
+These are implemented differently in the two algorithms, leading to different quality and performance levels:
 
-### Triangulation
+* **[CUT1](/algorithms/cut1.md)**: Uses a 2x2 pixel window and can approximate edges of 45°
+* **[CUT2](/algorithms/cut2.md)**: Uses a 4x4 pixel window and can approximate edges of  30°, 45° and 60°
 
-Triangulation is often used when upscaling images. In CUT, for each output pixel, we sample the 2x2 neighborhood and, compute the luminance of these four input pixels.
+## Configuration
 
-When the difference in luminance on one diagonal is much smaller compared to the other, we cut the pixel on that diagonal, creating two triangles.
+The look of both versions can be customized with a set of parameters:
 
-|Input Image|Triangulated Pixels|Chosen Triangulation|
-|---|---|---|
-![](images/algorithm/nearest/step1.jpg) | ![](images/algorithm/nearest/step2.jpg) | ![](images/algorithm/nearest/step3.jpg)
-
-### Interpolation
-
-The output of the first step is a series of triangles and squares, where each vertex is associated with an input pixel color. We can mix these colors using standard [bilinear interpolation](https://en.wikipedia.org/wiki/Bilinear_interpolation) on squares and [barycentric coordinates](https://en.wikipedia.org/wiki/Barycentric_coordinate_system) interpolation on triangles.
-
-Changing the interpolation function provides different levels of sharpness. You can see here the difference between two extremes: step and linear interpolations.
-
-|Triangulation|Step Interpolation|Linear Interpolation|
-|---|---|---|
-![](images/algorithm/nearest/step4.jpg) | ![](images/algorithm/nearest/step5.jpg) | ![](images/algorithm/nearest/step6.jpg)
-
-### Dynamic Sharpness
-
-When looking at 8-bit Pixel-Art, we definitely want these edges to be as sharp as possible, but as we start moving to 16-bit, gradients and bitmaps start to look noisy.
-
-CUT tries to solve this by measuring local contrast using the [Michelson formula](https://en.wikipedia.org/wiki/Contrast_(vision)#Michelson_contrast) on the input pixels and adjusts the interpolation function to produce sharper edges where the contrast is high and smoother edges where it's low.
-
-This increases the perceived resolution on edges, limiting noise or bands in gradients. These sharpness values can be tailored to the content displayed.
-
-|Input|CUT (Static Sharpness)|CUT (Dynamic Sharpness)|
-|---|---|---|
-![](images/algorithm/dynamic/step1-nearest.jpg) | ![](images/algorithm/dynamic/step2-sharp.jpg) | ![](images/algorithm/dynamic/step3.jpg)
-
-## Implementation
-
-The implementation is provided as a GLSL shader, and it comes with a couple of useful optimizations:
-* Instead of computing barycentric coordinates for the two triangles of each of the two triangulations, we move coordinates and points so that only one is calculated for each output fragment
-* Instead of computing the luminance of each input pixel, we take the green channel, which provides a good enough estimate and saves us four dot products
-
-The shader exposes a few parameters which can be used to customize the behaviour:
-
-```
-#define USE_DYNAMIC_SHARPNESS 1 // Set to 1 to use dynamic sharpening
-#define USE_SHARPENING_BIAS 1 // Set to 1 to bias the interpolation towards sharpening
-#define DYNAMIC_SHARPNESS_MIN 0.10 // Minimum amount of sharpening in range [0.0, 0.5]
-#define DYNAMIC_SHARPNESS_MAX 0.30 // Maximum amount of sharpening in range [0.0, 0.5]
-#define STATIC_SHARPNESS 0.2 // If USE_DYNAMIC_SHARPNESS is 0 apply this static sharpness
+```glsl
+#define USE_DYNAMIC_BLEND 1          // Dynamically blend color with respect to contrast
+#define BLEND_MIN_CONTRAST_EDGE 0.0  // Minimum contrast level at which sharpness starts increasing [0, 1]
+#define BLEND_MAX_CONTRAST_EDGE 1.0  // Maximum contrast level at which sharpness stops increasing [0, 1]
+#define BLEND_MIN_SHARPNESS 0.0      // Minimum sharpness level [0, 1]
+#define BLEND_MAX_SHARPNESS 1.0      // Maximum sharpness level [0, 1]
+#define STATIC_BLEND_SHARPNESS 0.5   // Sharpness level used when dynamic blending is disabled [0, 1]
+#define EDGE_USE_FAST_LUMA 0         // Use quick luma approximation in edge detection
+#define EDGE_MIN_VALUE 0.05          // Minimum luma difference used in edge detection [0, 1]
+#define EDGE_MIN_CONTRAST 1.20       // Minimum contrast ratio used in edge detection [1, ∞]
+#define LUMA_ADJUST_GAMMA 0          // Correct gamma to better approximate luma human perception
 ```
 
 ## Results
 
-Here you can find some results. The left part of the image is obtained with standard nearest-neighbor interpolation, while the right side is computed using two profiles of CUT:
-* For 2D games: (DYNAMIC_SHARPNESS_MIN: 0.10, DYNAMIC_SHARPNESS_MAX: 0.30)
-* For 3D games: (DYNAMIC_SHARPNESS_MIN: 0.00, DYNAMIC_SHARPNESS_MAX: 0.25)
+Here you can find some results. Each image is split in two, with the left side unprocessed and the right side with **CUT2** applied.
 
 ||||
 |---|---|---|
-![](images/final/example1.jpg) | ![](images/final/example2.jpg) | ![](images/final/example3.jpg)
-![](images/final/example4.jpg) | ![](images/final/example5.jpg) | ![](images/final/example6.jpg)
-![](images/final/example7.jpg) | ![](images/final/example8.jpg) | ![](images/final/example9.jpg)
+![](images/final/cut2/cut2-screen-01.jpg) | ![](images/final/cut2/cut2-screen-02.jpg) | ![](images/final/cut2/cut2-screen-03.jpg)
+![](images/final/cut2/cut2-screen-04.jpg) | ![](images/final/cut2/cut2-screen-05.jpg) | ![](images/final/cut2/cut2-screen-06.jpg)
+![](images/final/cut2/cut2-screen-07.jpg) | ![](images/final/cut2/cut2-screen-08.jpg) | ![](images/final/cut2/cut2-screen-09.jpg)
+
+You can also see some examples using **[CUT1](/algorithms/cut1.md#results)**.
 
 ## Performances
 
 There aren't yet extensive performance tests, but I tried measuring GPU load on my device, a Galaxy S21 FE with Snapdragon 888 playing Final Fantasy VI Advance.
 
-|Filter|GPU Utilization|Resolution|Note
-|---|---|---|---|
-Bilinear (Lemuroid) | ~0.8% | 1080p | --
-CRT (Lemuroid) | ~1.0% | 1080p | --
-**CUT (Lemuroid)** | **~1.5%** | **1080p** | --
-HQx2 (Retroarch) | ~1.5% | 320p | Fixed Resolution Increase of 2x
-HQx4 (Retroarch) | ~2.5% | 640p | Fixed Resolution Increase of 4x
-xbrz-freescale-multipass (Retroarch) | ~6.0% | 1080p | Best image quality on 2D content
-xbrz-freescale (Retroarch) | ~15% | 1080p | Best image quality on 2D content
+|Filter|GPU Utilization|Resolution
+|---|---|---|
+Bilinear (Lemuroid) | ~1.5% | 160p
+HQx2 (Retroarch) | ~2.5% | 320p
+**CUT1 (Lemuroid)** | **~3.5%** | **1080p**
+HQx4 (Retroarch) | ~4.5% | 640p
+**CUT2 (Lemuroid)** | **~6.5%** | **1080p**
+xbrz-freescale-multipass (Retroarch) | ~15.0% | 1080p
