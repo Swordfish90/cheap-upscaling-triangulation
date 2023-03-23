@@ -3,7 +3,7 @@
 Cheap Upscaling Triangulation (CUT) is a family of single-image upscaling algorithms for retro games designed to be:
 
 * **Versatile**: can upscale from and to any image resolution and are applicable to all the 2D and 3D consoles that [Lemuroid](https://github.com/Swordfish90/Lemuroid) supports
-* **Efficient**: keep the number of samples and calculations as low as possible in order to minimize battery consumption
+* **Efficient**: keep the number of samples and calculations as low as possible to minimize battery consumption
 
 In order to achieve this, we need to **CUT some corners**... Literally!
 
@@ -15,16 +15,16 @@ The family is composed of two algorithms **[CUT1](/algorithms/cut1.md)** and **[
 * Triangulation / Pattern Recognition
 * Interpolation
 
-These steps are implemented differently in the two algorithms, leading to different quality and performance levels:
+These are implemented differently in the two algorithms, leading to different quality and performance levels:
 
 * **[CUT1](/algorithms/cut1.md)**: Uses a 2x2 pixel window and can approximate edges of 45°
 * **[CUT2](/algorithms/cut2.md)**: Uses a 4x4 pixel window and can approximate edges of  30°, 45° and 60°
 
 ## Configuration
 
-The look of both algorithms can be customized with a set of parameters:
+The look of both versions can be customized with a set of parameters:
 
-```
+```c
 #define USE_DYNAMIC_BLEND 1          // Dynamically blend color with respect to contrast
 #define BLEND_MIN_CONTRAST_EDGE 0.0  // Minimum contrast level at which sharpness starts increasing [0, 1]
 #define BLEND_MAX_CONTRAST_EDGE 1.0  // Maximum contrast level at which sharpness stops increasing [0, 1]
@@ -39,7 +39,7 @@ The look of both algorithms can be customized with a set of parameters:
 
 ## Results
 
-Here you can find some results. On the left you can see the input image, while on the right the image processed with **CUT2**.
+Here you can find some results. The left half is the input image, while the right half is the processed image using **CUT2**.
 
 ||||
 |---|---|---|
@@ -47,7 +47,7 @@ Here you can find some results. On the left you can see the input image, while o
 ![](images/final/cut2/cut2-screen-04.jpg) | ![](images/final/cut2/cut2-screen-05.jpg) | ![](images/final/cut2/cut2-screen-06.jpg)
 ![](images/final/cut2/cut2-screen-07.jpg) | ![](images/final/cut2/cut2-screen-08.jpg) | ![](images/final/cut2/cut2-screen-09.jpg)
 
-Here you can find some results of **[CUT1](/algorithms/cut1.md#results)**.
+You can also see some examples using **[CUT1](/algorithms/cut1.md#results)**.
 
 ## Performances
 

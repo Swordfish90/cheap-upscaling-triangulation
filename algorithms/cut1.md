@@ -1,4 +1,4 @@
-# CUT
+# CUT1
 
 We sample a 2x2 window. To make it more efficient, we're only going to look at the luma plane.
 
