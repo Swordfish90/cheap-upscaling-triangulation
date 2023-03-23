@@ -83,7 +83,7 @@ bvec2 hasEdge(lowp float a, lowp float b, lowp float c, lowp float d, lowp float
 
 ### Edges with slope of one (45°)
 
-We can not look at the center square:
+We can look at the center square:
 
 ```
 A -- B
@@ -125,7 +125,7 @@ P05 -- P06
 P09 -- P10
 ```
 
-Considering the edges that we found in the previous step and ignoring symmetries, we're basically guaranteed to fall into one of these patterns: 
+Considering the edges that we found in the previous step and ignoring symmetries, we're extremely likely to fall into one of these patterns: 
 
 ||||
 |---|---|---|
@@ -197,7 +197,7 @@ lowp vec3 blend(lowp vec3 a, lowp vec3 b, lowp float t) {
 
 ## Results
 
-Here we can find some results. On the left we can see the input image, while on the right the image processed with **CUT2**.
+Here you can find some results. Each image is split in two, with the left side unprocessed and the right side with **CUT2** applied.
 
 ||||
 |---|---|---|
