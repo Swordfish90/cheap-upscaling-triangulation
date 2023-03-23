@@ -24,7 +24,7 @@ These are implemented differently in the two algorithms, leading to different qu
 
 The look of both versions can be customized with a set of parameters:
 
-```c
+```glsl
 #define USE_DYNAMIC_BLEND 1          // Dynamically blend color with respect to contrast
 #define BLEND_MIN_CONTRAST_EDGE 0.0  // Minimum contrast level at which sharpness starts increasing [0, 1]
 #define BLEND_MAX_CONTRAST_EDGE 1.0  // Maximum contrast level at which sharpness stops increasing [0, 1]
@@ -39,7 +39,7 @@ The look of both versions can be customized with a set of parameters:
 
 ## Results
 
-Here you can find some results. The left half is the input image, while the right half is the processed image using **CUT2**.
+Here you can find some results. Each image is split in two, with the left side unprocessed and the right side with **CUT2** applied.
 
 ||||
 |---|---|---|
