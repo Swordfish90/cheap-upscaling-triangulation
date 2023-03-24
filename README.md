@@ -61,3 +61,9 @@ HQx2 (Retroarch) | ~2.5% | 320p
 HQx4 (Retroarch) | ~4.5% | 640p
 **CUT2 (Lemuroid)** | **~6.5%** | **1080p**
 xbrz-freescale-multipass (Retroarch) | ~15.0% | 1080p
+
+
+## References
+
+* D. Su and P. Willis, "**Image interpolation by pixel level data-dependent triangulation**", Computer Graphics Forum, pp. 23, 2004.
+* A. Reshetov, "**Morphological antialiasing**", Proceedings of the Conference on High Performance Graphics 2009, pp. 109-116, 2009.
