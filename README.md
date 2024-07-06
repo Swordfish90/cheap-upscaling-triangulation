@@ -10,42 +10,50 @@ In order to achieve this, we need to **CUT some corners**... Literally!
 ## Algorithms
 
 The family is composed of three algorithms **CUT1**, **CUT2** and **CUT3**, which share the same basic steps:
+* **Triangulation**: Inspired by the method in [1], we analyze the luma plane of each 2x2 square to identify if the square has a vertical, horizontal, or diagonal orientation. In this last case we split the square into two.
+* **Pattern Recognition**: We examine neighboring samples and the results of the triangulation to develop an interpolation function for each side of the square.
+* **Interpolation**:  Using the triangulation results and the edge interpolation functions, we perform interpolation within the square.
 
-* **Edge Detection**
-* **Triangulation / Pattern Recognition**
-* **Interpolation**
-
-The three implementations are very different leading to different level of quality and performances. Here's the most critical differences:
-* **Passes**: Number of passes required to render the final image
-* **Samples**: Number of texture samples used from the original image
-* **Angle Resolution**: The minimal angle the algorithm is able to correctly represent. CUT3 is also able to follow edges up to a configurable distance to correctly approximate all kinds of inclinations.
+The three implementations have different levels of quality and features:
+* **Passes**: Number of passes required to render the final image. Except the last one, every step outputs a buffer with the same resolution as the input image.
+* **Samples**: Number of texture samples read from the original image
+* **Angle Resolution**: The minimal angle the algorithm is able to correctly represent. Using an approach similar to [2] CUT3 is able to follow those edges.
 * **Soft Edges**: CUT2 and CUT3 are also able to improve the definition of edges which are wider than one pixel. This greatly helps with anti-aliased content.
 
-| Algorithm                            | Passes | Samples | Angle Resolution | Soft-Edges Handling |
-|--------------------------------------|--------|---------|------------------|---------------------|
-| CUT1                                 | 1      | 4       | 45               | No                  |
-| CUT2                                 | 2      | 12      | 30               | Yes                 |
-| CUT3                                 | 3      | 12      | Configurable     | Yes                 |
+| Algorithm                    | Passes | Samples | Angle Resolution | Soft-Edges Handling |
+|------------------------------|--------|---------|------------------|---------------------|
+| **[CUT1](src/shaders/cut1)** | 1      | 4       | 45               | No                  |
+| **[CUT2](src/shaders/cut2)** | 2      | 12      | 30               | Yes                 |
+| **[CUT3](src/shaders/cut3)** | 3      | 12      | Configurable     | Yes                 |
 
 ## Results
 
-Here you can check a simple webapp that applies the filters on a set of game screenshots.
+Check a simple webapp that applies the filters to some game screenshots:
+
+[https://swordfish90.github.io/cheap-upscaling-triangulation/](https://swordfish90.github.io/cheap-upscaling-triangulation/)
 
 ## Configuration
 
 The look of both versions can be customized with a set of parameters:
 
 ```glsl
-#define USE_DYNAMIC_BLEND 1          // Dynamically blend color with respect to contrast
-#define BLEND_MIN_CONTRAST_EDGE 0.0  // Minimum contrast level at which sharpness starts increasing [0, 1]
-#define BLEND_MAX_CONTRAST_EDGE 1.0  // Maximum contrast level at which sharpness stops increasing [0, 1]
-#define BLEND_MIN_SHARPNESS 0.0      // Minimum sharpness level [0, 1]
-#define BLEND_MAX_SHARPNESS 1.0      // Maximum sharpness level [0, 1]
-#define STATIC_BLEND_SHARPNESS 0.5   // Sharpness level used when dynamic blending is disabled [0, 1]
-#define EDGE_USE_FAST_LUMA 0         // Use quick luma approximation in edge detection
-#define EDGE_MIN_VALUE 0.05          // Minimum luma difference used in edge detection [0, 1]
-#define EDGE_MIN_CONTRAST 1.20       // Minimum contrast ratio used in edge detection [1, ∞]
-#define LUMA_ADJUST_GAMMA 0          // Correct gamma to better approximate luma human perception
+// Available in CUT1, CUT2 and CUT3
+#define USE_DYNAMIC_BLEND 1                 // Dynamically blend color with respect to contrast
+#define BLEND_MIN_CONTRAST_EDGE 0.0         // Minimum contrast level at which sharpness starts increasing [0, 1]
+#define BLEND_MAX_CONTRAST_EDGE 1.0         // Maximum contrast level at which sharpness stops increasing [0, 1]
+#define BLEND_MIN_SHARPNESS 0.0             // Minimum sharpness level [0, 1]
+#define BLEND_MAX_SHARPNESS 1.0             // Maximum sharpness level [0, 1]
+#define STATIC_BLEND_SHARPNESS 0.5          // Sharpness level used when dynamic blending is disabled [0, 1]
+#define EDGE_USE_FAST_LUMA 0                // Use quick luma approximation in edge detection
+#define EDGE_MIN_VALUE 0.05                 // Minimum luma difference used in edge detection [0, 1]
+#define LUMA_ADJUST_GAMMA 0                 // Correct gamma to better approximate luma human perception
+
+// Available in CUT2 and CUT3
+#define SOFT_EDGES_SHARPENING 1             // Enable soft-edges sharpening
+#define SOFT_EDGES_SHARPENING_AMOUNT 0.75   // Maximum size reduction of soft-edges pixels (antialiased pixels) [0, 1]
+
+// Available in CUT3
+#define MAX_SEARCH_DISTANCE 8               // Maximum search distance in each direction (N,E,S,W) to find a continuous edge [1, ∞[ 
 ```
 
 ## Performances

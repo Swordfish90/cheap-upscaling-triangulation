@@ -47,7 +47,7 @@ function initializeImageElement(image: string) {
     params.set('left', localStorage.getItem(localStorageLeftShaderKey) || shaderValues[0]);
     params.set('right', localStorage.getItem(localStorageRightShaderKey) || shaderValues[4]);
 
-    window.location.href = `/demo.html?${params.toString()}`;
+    window.location.href = `/cheap-upscaling-triangulation/demo.html?${params.toString()}`;
   });
   return imgElement;
 }

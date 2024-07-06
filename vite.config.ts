@@ -28,5 +28,6 @@ export default defineConfig({
         demo: resolve(__dirname, 'demo.html'),
       }
     }
-  }
+  },
+  base: "/cheap-upscaling-triangulation/"
 });
