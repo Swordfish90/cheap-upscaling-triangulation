@@ -1,0 +1,51 @@
+<!--
+  ~ Cheap Upscaling Triangulation
+  ~
+  ~ Copyright (c) Filippo Scognamiglio 2024
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  -->
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <link rel="icon" type="image/svg+xml" href="/vite.svg"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/@picocss/pico@2.0.6/css/pico.classless.min.css"
+  />
+  <title>Cheap Upscaling Triangulation</title>
+</head>
+<script type="module" src="src/pages/main/main.ts"></script>
+<body>
+<header>
+  <hgroup>
+    <h1>Cheap Upscaling Triangulation Demos</h1>
+  </hgroup>
+</header>
+<main>
+  <section id="preview">
+    <div class="select-container">
+      <select name="Left" id="left-shader-select"></select>
+      <select name="Right" id="right-shader-select"></select>
+    </div>
+  </section>
+  <section>
+    <div id="image-grid" class="grid-container"></div>
+  </section>
+</main>
+</body>
+</html>

@@ -1,6 +1,6 @@
 # Cheap Upscaling Triangulation
 
-Cheap Upscaling Triangulation (CUT) is a family of single-image upscaling algorithms for retro games designed to be:
+Cheap Upscaling Triangulation (CUT) is a family of single-image upscaling algorithms for retro and modern games designed to be:
 
 * **Versatile**: can upscale from and to any image resolution and are applicable to all the 2D and 3D consoles that [Lemuroid](https://github.com/Swordfish90/Lemuroid) supports
 * **Efficient**: keep the number of samples and calculations as low as possible to minimize battery consumption
@@ -9,16 +9,27 @@ In order to achieve this, we need to **CUT some corners**... Literally!
 
 ## Algorithms
 
-The family is composed of two algorithms **[CUT1](/algorithms/cut1.md)** and **[CUT2](/algorithms/cut2.md)**, which share the same basic steps:
+The family is composed of three algorithms **CUT1**, **CUT2** and **CUT3**, which share the same basic steps:
 
-* Edge Detection
-* Triangulation / Pattern Recognition
-* Interpolation
+* **Edge Detection**
+* **Triangulation / Pattern Recognition**
+* **Interpolation**
 
-These are implemented differently in the two algorithms, leading to different quality and performance levels:
+The three implementations are very different leading to different level of quality and performances. Here's the most critical differences:
+* **Passes**: Number of passes required to render the final image
+* **Samples**: Number of texture samples used from the original image
+* **Angle Resolution**: The minimal angle the algorithm is able to correctly represent. CUT3 is also able to follow edges up to a configurable distance to correctly approximate all kinds of inclinations.
+* **Soft Edges**: CUT2 and CUT3 are also able to improve the definition of edges which are wider than one pixel. This greatly helps with anti-aliased content.
 
-* **[CUT1](/algorithms/cut1.md)**: Uses a 2x2 pixel window and can approximate edges of 45°
-* **[CUT2](/algorithms/cut2.md)**: Uses a 4x4 pixel window and can approximate edges of  30°, 45° and 60°
+| Algorithm                            | Passes | Samples | Angle Resolution | Soft-Edges Handling |
+|--------------------------------------|--------|---------|------------------|---------------------|
+| CUT1                                 | 1      | 4       | 45               | No                  |
+| CUT2                                 | 2      | 12      | 30               | Yes                 |
+| CUT3                                 | 3      | 12      | Configurable     | Yes                 |
+
+## Results
+
+Here you can check a simple webapp that applies the filters on a set of game screenshots.
 
 ## Configuration
 
@@ -37,33 +48,21 @@ The look of both versions can be customized with a set of parameters:
 #define LUMA_ADJUST_GAMMA 0          // Correct gamma to better approximate luma human perception
 ```
 
-## Results
-
-Here you can find some results. Each image is split in two, with the left side unprocessed and the right side with **CUT2** applied.
-
-||||
-|---|---|---|
-![](images/final/cut2/cut2-screen-01.jpg) | ![](images/final/cut2/cut2-screen-02.jpg) | ![](images/final/cut2/cut2-screen-03.jpg)
-![](images/final/cut2/cut2-screen-04.jpg) | ![](images/final/cut2/cut2-screen-05.jpg) | ![](images/final/cut2/cut2-screen-06.jpg)
-![](images/final/cut2/cut2-screen-07.jpg) | ![](images/final/cut2/cut2-screen-08.jpg) | ![](images/final/cut2/cut2-screen-09.jpg)
-
-You can also see some examples using **[CUT1](/algorithms/cut1.md#results)**.
-
 ## Performances
 
 There aren't yet extensive performance tests, but I tried measuring GPU load on my device, a Galaxy S21 FE with Snapdragon 888 playing Final Fantasy VI Advance.
 
-|Filter|GPU Utilization|Resolution
-|---|---|---|
-Bilinear (Lemuroid) | ~1.5% | 160p
-HQx2 (Retroarch) | ~2.5% | 320p
-**CUT1 (Lemuroid)** | **~3.5%** | **1080p**
-HQx4 (Retroarch) | ~4.5% | 640p
-**CUT2 (Lemuroid)** | **~6.5%** | **1080p**
-xbrz-freescale-multipass (Retroarch) | ~15.0% | 1080p
-
+| Filter                               | GPU Utilization | Resolution |
+|--------------------------------------|-----------------|------------|
+| Bilinear (Lemuroid)                  | ~1.5%           | 160p       |
+| HQx2 (Retroarch)                     | ~2.5%           | 320p       |
+| **CUT1 (Lemuroid)**                  | **~3.5%**       | **1080p**  |
+| HQx4 (Retroarch)                     | ~4.5%           | 640p       |
+| **CUT2 (Lemuroid)**                  | **~5.5%**       | **1080p**  |
+| **CUT3 (Lemuroid)**                  | **~6.5%**       | **1080p**  |
+| xbrz-freescale-multipass (Retroarch) | ~15.0%          | 1080p      |
 
 ## References
 
-* D. Su and P. Willis, "**Image interpolation by pixel level data-dependent triangulation**", Computer Graphics Forum, pp. 23, 2004.
-* A. Reshetov, "**Morphological antialiasing**", Proceedings of the Conference on High Performance Graphics 2009, pp. 109-116, 2009.
+* [1] D. Su and P. Willis, "**Image interpolation by pixel level data-dependent triangulation**", Computer Graphics Forum, pp. 23, 2004.
+* [2] A. Reshetov, "**Morphological antialiasing**", Proceedings of the Conference on High Performance Graphics 2009, pp. 109-116, 2009.
