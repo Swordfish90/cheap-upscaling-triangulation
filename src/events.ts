@@ -29,38 +29,110 @@ export function setUpDragging(
   let imageScale = 1;
   let mouseStart = new THREE.Vector2();
   let imageStart = new THREE.Vector2();
-  let isDragging = false;
+  let isPanning = false;
+  let pinchDistance = 0;
 
-  window.addEventListener('mousedown', (e) => {
+  const handlePanStart = (pageX: number, pageY: number) => {
     imageStart = fetchPosition();
     imageScale = fetchScale();
-    mouseStart = new THREE.Vector2(e.pageX, e.pageY);
-    isDragging = true;
+    mouseStart = new THREE.Vector2(pageX, pageY);
+    isPanning = true;
+  };
+
+  const handlePanMove = (pageX: number, pageY: number) => {
+    if (isPanning) {
+      const updatedPosition = new THREE.Vector2(
+        imageStart.x - 2.0 * (pageX - mouseStart.x) / imageScale,
+        imageStart.y + 2.0 * (pageY - mouseStart.y) / imageScale
+      );
+
+      updatePosition(updatedPosition);
+    }
+  };
+
+  const handlePinchStart = (e: TouchEvent) => {
+    pinchDistance = computePinchDistance(e.touches);
+    imageScale = fetchScale();
+  }
+
+  const handlePinchMove = (e: TouchEvent) => {
+    const newDistance = computePinchDistance(e.touches);
+    const scaleChange = newDistance / pinchDistance;
+    updateScale(imageScale * scaleChange);
+  }
+
+  window.addEventListener('mousedown', (e) => {
+    handlePanStart(e.pageX, e.pageY);
   });
 
   window.addEventListener('mousemove', (e) => {
-    if (isDragging) {
-      const updatedPosition = new THREE.Vector2(
-        imageStart.x - 2.0 * (e.pageX - mouseStart.x) / imageScale,
-        imageStart.y + 2.0 * (e.pageY - mouseStart.y) / imageScale
-      )
-
-      updatePosition(updatedPosition)
-    }
+    handlePanMove(e.pageX, e.pageY);
   });
 
   window.addEventListener('wheel', (e) => {
-    let scale = fetchScale()
+    let scale = fetchScale();
     const delta = e.deltaY > 0 ? 1.1 : 0.9;
     scale *= delta;
     updateScale(scale);
   });
 
   window.addEventListener('mouseup', () => {
-    isDragging = false;
+    isPanning = false;
   });
 
   window.addEventListener('mouseleave', () => {
-    isDragging = false;
+    isPanning = false;
   });
+
+  window.addEventListener(
+    'touchstart',
+    (e) => {
+      e.preventDefault();
+      if (e.touches.length === 1) {
+        const touch = e.touches[0];
+        handlePanStart(touch.pageX, touch.pageY);
+      } else if (e.touches.length === 2) {
+        isPanning = false;
+        handlePinchStart(e);
+      }
+    },
+    { passive: false }
+  );
+
+  window.addEventListener(
+    'touchmove',
+    (e) => {
+      e.preventDefault();
+      if (e.touches.length === 1) {
+        const touch = e.touches[0];
+        handlePanMove(touch.pageX, touch.pageY);
+      } else if (e.touches.length === 2) {
+        handlePinchMove(e);
+      }
+    },
+    { passive: false }
+  );
+
+  window.addEventListener(
+    'touchend',
+    (e) => {
+      e.preventDefault();
+      if (e.touches.length < 1) {
+        isPanning = false;
+      }
+    },
+    { passive: false }
+  );
+
+  window.addEventListener('touchcancel', (e) => {
+    e.preventDefault();
+    isPanning = false;
+  });
+}
+
+function computePinchDistance(touches: TouchList): number {
+  const [touch1, touch2] = touches;
+  const dx = touch2.pageX - touch1.pageX;
+  const dy = touch2.pageY - touch1.pageY;
+  return Math.sqrt(dx * dx + dy * dy);
 }
