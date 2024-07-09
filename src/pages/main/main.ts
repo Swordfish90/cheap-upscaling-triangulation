@@ -27,6 +27,7 @@ const images = [
   'hqx-patterns.bmp',
   'mario-nes.png',
   'pokemon-yellow-sgb.png',
+  'bof2-snes.png',
   'advance-wars-gba.png',
   'ffvii-psx.png',
   'medievil-resurrection-psp.png',

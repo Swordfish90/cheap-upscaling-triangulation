@@ -62,7 +62,7 @@ lowp float quickPackFloats2(lowp vec2 values) {
   return dot(floor(values * vec2(12.0) + vec2(0.5)), vec2(0.0625, 0.00390625));
 }
 
-lowp int findPattern(lowp vec4 values, lowp vec2 diagonals) {
+lowp int findPattern(lowp vec4 values, lowp vec2 saddleAdjustments) {
   lowp vec4 edgesDifferences = abs(values.xxyz - values.yzww);
 
   lowp vec4 patternContrasts = vec4(
@@ -72,13 +72,16 @@ lowp int findPattern(lowp vec4 values, lowp vec2 diagonals) {
     max(edgesDifferences.x + edgesDifferences.y, edgesDifferences.z + edgesDifferences.w)
   );
 
-  patternContrasts.zw += 0.125 * clamp(diagonals.yx - diagonals.xy, -2.0, +0.125);
+  patternContrasts.zw += clamp((saddleAdjustments.xy - saddleAdjustments.yx) * 0.125, vec2(-0.20), vec2(0.05));
 
-  lowp float maxContrast = max(max(patternContrasts.x, patternContrasts.y), max(patternContrasts.z, patternContrasts.w));
+  lowp float maxContrast = max(
+    max(patternContrasts.x, patternContrasts.y),
+    max(patternContrasts.z, patternContrasts.w)
+  );
+
   bvec4 isMax = greaterThanEqual(patternContrasts, vec4(maxContrast));
-  bool isSaddle = all(isMax);
 
-  if (maxContrast < EDGE_MIN_VALUE || isSaddle) {
+  if (maxContrast < EDGE_MIN_VALUE) {
     return 0;
   } else if (isMax.x) {
     return 1;
@@ -168,12 +171,12 @@ void main() {
     softEdgeWeight(l01, l05, l09, l13)
   );
 
-  edges = clamp(edges + 2.0 * softEdges, min(edges, softEdges), max(edges, softEdges));
+  edges = clamp(edges + softEdges, min(edges, softEdges), max(edges, softEdges));
 #endif
 
   lowp vec2 diagonals = vec2(
-    (abs(l06 - l01) + abs(l11 - l06) + abs(l14 - l09) + abs(l09 - l04)),
-    (abs(l08 - l05) + abs(l05 - l02) + abs(l13 - l10) + abs(l10 - l07))
+    abs(l08 - l05) + abs(l13 - l10) + abs(l10 - l07) + abs(l05 - l02),
+    abs(l06 - l01) + abs(l09 - l04) + abs(l11 - l06) + abs(l14 - l09)
   );
 
   pattern = findPattern(vec4(l05, l06, l09, l10), diagonals);
