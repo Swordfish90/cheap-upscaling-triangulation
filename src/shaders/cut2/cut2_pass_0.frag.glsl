@@ -79,9 +79,10 @@ lowp int findPattern(lowp vec4 values, lowp vec2 saddleAdjustments) {
     max(patternContrasts.z, patternContrasts.w)
   );
 
-  bvec4 isMax = greaterThanEqual(patternContrasts, vec4(maxContrast));
+  bvec4 isMax = greaterThanEqual(patternContrasts, vec4(maxContrast - EPSILON));
+  bool isSaddle = all(isMax);
 
-  if (maxContrast < EDGE_MIN_VALUE) {
+  if (maxContrast < EDGE_MIN_VALUE || isSaddle) {
     return 0;
   } else if (isMax.x) {
     return 1;
@@ -98,8 +99,8 @@ lowp int findPattern(lowp vec4 values, lowp vec2 saddleAdjustments) {
 
 lowp float softEdgeWeight(lowp float a, lowp float b, lowp float c, lowp float d) {
   lowp float result = 0.0;
-  result += clamp(1.0 - 2.0 * abs((max(abs(b - c), abs(c - d))) / (abs(b - d) + EPSILON) - 0.5), 0.0, 1.0);
-  result -= clamp(1.0 - 2.0 * abs((max(abs(a - b), abs(b - c))) / (abs(a - c) + EPSILON) - 0.5), 0.0, 1.0);
+  result += clamp(abs((2.0 * b - (a + c))) / abs(a - c), 0.0, 1.0);
+  result -= clamp(abs((2.0 * c - (d + b))) / abs(b - d), 0.0, 1.0);
   return clamp(result, -1.0, 1.0);
 }
 
@@ -164,12 +165,13 @@ void main() {
   );
 
 #if SOFT_EDGES_SHARPENING
-  lowp vec4 softEdges = SOFT_EDGES_SHARPENING_AMOUNT * vec4(
+  lowp vec4 softEdges = vec4(
     softEdgeWeight(l04, l05, l06, l07),
     softEdgeWeight(l02, l06, l10, l14),
     softEdgeWeight(l08, l09, l10, l11),
     softEdgeWeight(l01, l05, l09, l13)
   );
+  softEdges = clamp(softEdges, vec4(-SOFT_EDGES_SHARPENING_AMOUNT), vec4(SOFT_EDGES_SHARPENING_AMOUNT));
 
   edges = clamp(edges + softEdges, min(edges, softEdges), max(edges, softEdges));
 #endif

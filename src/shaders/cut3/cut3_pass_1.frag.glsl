@@ -27,8 +27,8 @@ precision lowp float;
 
 #define EPSILON 0.02
 
-const float STEP = 0.5 / float(MAX_SEARCH_DISTANCE);
-const float HSTEP = (STEP * 0.5);
+const lowp float STEP = 0.5 / float(MAX_SEARCH_DISTANCE);
+const lowp float HSTEP = (STEP * 0.5);
 
 uniform lowp sampler2D previousPass;
 
@@ -173,10 +173,11 @@ void main() {
   );
 
 #if SOFT_EDGES_SHARPENING
-  lowp vec4 softEdges = 2.0 * SOFT_EDGES_SHARPENING_AMOUNT * vec4(
+  lowp vec4 softEdges = 2.0 * vec4(
     quickUnpackFloats2(previousPassPixel.y + 0.001953125) - vec2(0.5),
     quickUnpackFloats2(previousPassPixel.z + 0.001953125) - vec2(0.5)
   );
+  softEdges = clamp(softEdges, vec4(-SOFT_EDGES_SHARPENING_AMOUNT), vec4(SOFT_EDGES_SHARPENING_AMOUNT));
 
   edges = clamp(edges + softEdges, min(edges, softEdges), max(edges, softEdges));
 #endif

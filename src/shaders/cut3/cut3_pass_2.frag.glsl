@@ -143,7 +143,7 @@ ShapeWeights triangleWeights(lowp vec2 pxCoords, lowp vec2 edgeWeights) {
   ShapeWeights result;
   lowp float m = edgeWeights.x;
   lowp float n = edgeWeights.y;
-  lowp float a = (n * m + pxCoords.y * (1.0 - m - n)) / (n * m + pxCoords.x * (1.0 - m - n));
+  lowp float a = (n * m + pxCoords.y * (1.0 - m - n)) / (n * m + pxCoords.x * (1.0 - m - n) + EPSILON);
   lowp vec2 projections = vec2((pxCoords.y -a * pxCoords.x), (1.0 - pxCoords.y) / a + pxCoords.x);
   result.weights = vec3(projections.x, projections.y, pxCoords.x / (projections.y + EPSILON));
   result.midPoints = vec3(m, n, 0.5);
