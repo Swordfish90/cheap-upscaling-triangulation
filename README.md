@@ -10,21 +10,25 @@ In order to achieve this, we need to **CUT some corners**... Literally!
 ## Algorithms
 
 The family is composed of three algorithms **CUT1**, **CUT2** and **CUT3**, which share the same basic steps:
-* **Triangulation**: Inspired by the method in [1], we analyze the luma plane of each 2x2 square to identify if the square has a vertical, horizontal, or diagonal orientation. In this last case we split the square into two.
-* **Pattern Recognition**: We examine neighboring samples and the results of the triangulation to develop an interpolation function for each side of the square.
-* **Interpolation**:  Using the triangulation results and the edge interpolation functions, we perform interpolation within the square.
+* **Triangulation**: Inspired by the method in [1], we analyze the luma plane of each 2x2 square to identify if the square has a vertical, horizontal, or diagonal orientation. In this last case we split the square into two triangles.
+* **Pattern Recognition**: We examine neighboring samples and the results of the triangulation to create an interpolation function for each side of the square.
+* **Interpolation**: We use the triangulation and the function on each side to interpolate colors within the square or triangles.
 
-The three implementations have different levels of quality and features:
+The three algorithms have different levels of quality and features:
 * **Passes**: Number of passes required to render the final image. Except the last one, every step outputs a buffer with the same resolution as the input image.
-* **Samples**: Number of texture samples read from the original image
+* **Samples**: Number of texture samples read from the original image.
 * **Angle Resolution**: The minimal angle the algorithm is able to correctly represent. Using an approach similar to [2] CUT3 is able to follow those edges.
 * **Soft Edges**: CUT2 and CUT3 are also able to improve the definition of edges which are wider than one pixel. This greatly helps with anti-aliased content.
 
-| Algorithm                    | Passes | Samples | Angle Resolution | Soft-Edges Handling |
-|------------------------------|--------|---------|------------------|---------------------|
-| **[CUT1](src/shaders/cut1)** | 1      | 4       | 45               | No                  |
-| **[CUT2](src/shaders/cut2)** | 2      | 12      | 30               | Yes                 |
-| **[CUT3](src/shaders/cut3)** | 3      | 12      | Configurable     | Yes                 |
+| Algorithm                    | Passes | Samples                | Angle Resolution | Soft-Edges Handling |
+|------------------------------|--------|------------------------|------------------|---------------------|
+| **[CUT1](src/shaders/cut1)** | 1      | 4\*O                   | 45               | No                  |
+| **[CUT2](src/shaders/cut2)** | 2      | 12\*I + 5\*O           | 30               | Yes                 |
+| **[CUT3](src/shaders/cut3)** | 3      | 12\*I + 4\*D\*I + 5\*O | Configurable     | Yes                 |
+
+* I: Input image resolution
+* O: Output image resolution
+* D: Edge search distance in each direction (this is tied to angle resolution)
 
 ## Results
 
@@ -34,7 +38,7 @@ Check a simple webapp that applies the filters to some game screenshots:
 
 ## Configuration
 
-The look of both versions can be customized with a set of parameters:
+The look of every variant can be customized with a set of parameters:
 
 ```glsl
 // Available in CUT1, CUT2 and CUT3
