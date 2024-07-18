@@ -139,14 +139,14 @@ lowp vec3 blend(lowp vec3 a, lowp vec3 b, lowp float t, lowp float midPoint, low
   return mix(a, b, nt);
 }
 
-ShapeWeights triangleWeights(lowp vec2 pxCoords, lowp vec2 edgeWeights) {
+ShapeWeights triangleWeights(lowp vec2 pxCoords, lowp vec2 edgeWeights, lowp float diagonalWeight) {
   ShapeWeights result;
   lowp float m = edgeWeights.x;
   lowp float n = edgeWeights.y;
-  lowp float a = (n * m + pxCoords.y * (1.0 - m - n)) / (n * m + pxCoords.x * (1.0 - m - n));
+  lowp float a = (n * m + pxCoords.y * (1.0 - m - n)) / (n * m + pxCoords.x * (1.0 - m - n) + EPSILON);
   lowp vec2 projections = vec2((pxCoords.y -a * pxCoords.x), (1.0 - pxCoords.y) / a + pxCoords.x);
   result.weights = vec3(projections.x, projections.y, pxCoords.x / (projections.y + EPSILON));
-  result.midPoints = vec3(m, n, 0.5);
+  result.midPoints = vec3(m, n, diagonalWeight);
   return result;
 }
 
@@ -161,6 +161,11 @@ ShapeWeights quadWeights(lowp vec2 pxCoords, lowp vec4 edgeWeights) {
   return result;
 }
 
+lowp float triangleDiagonalWeight(lowp vec4 edgeWeights) {
+  lowp float result = max(edgeWeights.x, edgeWeights.y) - max(0.5 - edgeWeights.y, 0.5 - edgeWeights.z);
+  return clamp(result, 0.5 * (1.0 - SOFT_EDGES_SHARPENING_AMOUNT), 0.5 * (1.0 + SOFT_EDGES_SHARPENING_AMOUNT));
+}
+
 Pattern pattern(Pixels pixels, lowp vec4 edgeWeights, bool triangle, lowp vec2 pxCoords) {
   Pattern result;
 
@@ -170,7 +175,11 @@ Pattern pattern(Pixels pixels, lowp vec4 edgeWeights, bool triangle, lowp vec2 p
   ShapeWeights shapeWeights;
 
   if (triangle) {
-    shapeWeights = triangleWeights(firstTriangle ? pxCoords : pxCoords.yx, firstTriangle ? edgeWeights.wz : edgeWeights.xy);
+    shapeWeights = triangleWeights(
+      firstTriangle ? pxCoords : pxCoords.yx,
+      firstTriangle ? edgeWeights.wz : edgeWeights.xy,
+      triangleDiagonalWeight(edgeWeights)
+    );
   } else {
     shapeWeights = quadWeights(pxCoords, edgeWeights);
   }
