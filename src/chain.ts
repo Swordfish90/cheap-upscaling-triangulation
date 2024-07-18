@@ -114,6 +114,7 @@ export function createSceneWithShaderChain(
 
   setUpDragging(
     window,
+    size,
     () => {
       const camera = cameras[cameras.length - 1];
       return new THREE.Vector2(camera.position.x * window.innerWidth, camera.position.y * window.innerHeight);

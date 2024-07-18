@@ -21,6 +21,7 @@ import * as THREE from "three";
 
 export function setUpDragging(
   window: Window,
+  windowSize: THREE.Vector2,
   fetchPosition: () => THREE.Vector2,
   updatePosition: (position: THREE.Vector2) => void,
   fetchScale: () => number,
@@ -42,8 +43,8 @@ export function setUpDragging(
   const handlePanMove = (pageX: number, pageY: number) => {
     if (isPanning) {
       const updatedPosition = new THREE.Vector2(
-        imageStart.x - 2.0 * (pageX - mouseStart.x) / imageScale,
-        imageStart.y + 2.0 * (pageY - mouseStart.y) / imageScale
+        imageStart.x - 2.0 * (pageX - mouseStart.x) / imageScale / windowSize.width,
+        imageStart.y + 2.0 * (pageY - mouseStart.y) / imageScale / windowSize.height
       );
 
       updatePosition(updatedPosition);

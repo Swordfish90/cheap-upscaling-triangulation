@@ -31,7 +31,7 @@ varying HIGHP vec2 c05;
 varying HIGHP vec2 dc;
 
 void main() {
-  HIGHP vec2 coords = uv * 1.00001;
+  HIGHP vec2 coords = uv * 1.00006103515625;
   HIGHP vec2 screenCoords = coords * textureSize - vec2(0.5);
   c05 = (screenCoords + vec2(+0.0, +0.0)) / textureSize;
   passCoords = c05;
