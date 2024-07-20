@@ -72,7 +72,7 @@ lowp int findPattern(lowp vec4 values, lowp vec2 saddleAdjustments) {
     max(edgesDifferences.x + edgesDifferences.y, edgesDifferences.z + edgesDifferences.w)
   );
 
-  patternContrasts.zw += clamp((saddleAdjustments.xy - saddleAdjustments.yx) * 0.125, vec2(-0.20), vec2(0.05));
+  patternContrasts.zw += clamp((saddleAdjustments.xy - saddleAdjustments.yx) * 0.125, vec2(-0.10), vec2(0.05));
 
   lowp float maxContrast = max(
     max(patternContrasts.x, patternContrasts.y),
@@ -165,13 +165,12 @@ void main() {
   );
 
 #if SOFT_EDGES_SHARPENING
-  lowp vec4 softEdges = vec4(
+  lowp vec4 softEdges = SOFT_EDGES_SHARPENING_AMOUNT * vec4(
     softEdgeWeight(l04, l05, l06, l07),
     softEdgeWeight(l02, l06, l10, l14),
     softEdgeWeight(l08, l09, l10, l11),
     softEdgeWeight(l01, l05, l09, l13)
   );
-  softEdges = clamp(softEdges, vec4(-SOFT_EDGES_SHARPENING_AMOUNT), vec4(SOFT_EDGES_SHARPENING_AMOUNT));
 
   edges = clamp(edges + softEdges, min(edges, softEdges), max(edges, softEdges));
 #endif

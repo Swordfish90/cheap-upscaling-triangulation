@@ -173,11 +173,10 @@ void main() {
   );
 
 #if SOFT_EDGES_SHARPENING
-  lowp vec4 softEdges = 2.0 * vec4(
+  lowp vec4 softEdges = 2.0 * SOFT_EDGES_SHARPENING_AMOUNT * vec4(
     quickUnpackFloats2(previousPassPixel.y + 0.001953125) - vec2(0.5),
     quickUnpackFloats2(previousPassPixel.z + 0.001953125) - vec2(0.5)
   );
-  softEdges = clamp(softEdges, vec4(-SOFT_EDGES_SHARPENING_AMOUNT), vec4(SOFT_EDGES_SHARPENING_AMOUNT));
 
   edges = clamp(edges + softEdges, min(edges, softEdges), max(edges, softEdges));
 #endif

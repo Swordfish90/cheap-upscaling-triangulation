@@ -162,8 +162,9 @@ ShapeWeights quadWeights(lowp vec2 pxCoords, lowp vec4 edgeWeights) {
 }
 
 lowp float triangleDiagonalWeight(lowp vec4 edgeWeights) {
-  lowp float result = max(edgeWeights.x, edgeWeights.y) - max(0.5 - edgeWeights.y, 0.5 - edgeWeights.z);
-  return clamp(result, 0.5 * (1.0 - SOFT_EDGES_SHARPENING_AMOUNT), 0.5 * (1.0 + SOFT_EDGES_SHARPENING_AMOUNT));
+  lowp float d1 = max(edgeWeights.x, edgeWeights.w);
+  lowp float d2 = 1.0 - min(edgeWeights.y, edgeWeights.z);
+  return 0.5 * (1.0 + d1 - d2);
 }
 
 Pattern pattern(Pixels pixels, lowp vec4 edgeWeights, bool triangle, lowp vec2 pxCoords) {

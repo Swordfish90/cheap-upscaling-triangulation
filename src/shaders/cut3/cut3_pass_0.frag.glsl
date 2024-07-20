@@ -72,7 +72,7 @@ lowp int findPattern(lowp vec4 values, lowp vec2 saddleAdjustments) {
     max(edgesDifferences.x + edgesDifferences.y, edgesDifferences.z + edgesDifferences.w)
   );
 
-  patternContrasts.zw += clamp((saddleAdjustments.xy - saddleAdjustments.yx) * 0.125, vec2(-0.20), vec2(0.05));
+  patternContrasts.zw += clamp((saddleAdjustments.xy - saddleAdjustments.yx) * 0.125, vec2(-0.10), vec2(0.05));
 
   lowp float maxContrast = max(
     max(patternContrasts.x, patternContrasts.y),
