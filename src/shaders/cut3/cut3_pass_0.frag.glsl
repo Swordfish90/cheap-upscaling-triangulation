@@ -72,7 +72,7 @@ lowp int findPattern(lowp vec4 values, lowp vec2 saddleAdjustments) {
     max(edgesDifferences.x + edgesDifferences.y, edgesDifferences.z + edgesDifferences.w)
   );
 
-  patternContrasts.zw += clamp((saddleAdjustments.xy - saddleAdjustments.yx) * 0.125, vec2(-0.10), vec2(0.05));
+  patternContrasts.zw += clamp((saddleAdjustments.xy - saddleAdjustments.yx) * 0.125, vec2(-0.20), vec2(0.05));
 
   lowp float maxContrast = max(
     max(patternContrasts.x, patternContrasts.y),
@@ -101,7 +101,7 @@ lowp float softEdgeWeight(lowp float a, lowp float b, lowp float c, lowp float d
   lowp float result = 0.0;
   result += clamp(abs((2.0 * b - (a + c))) / abs(a - c), 0.0, 1.0);
   result -= clamp(abs((2.0 * c - (d + b))) / abs(b - d), 0.0, 1.0);
-  return clamp(result, -1.0, 1.0);
+  return step(EDGE_MIN_VALUE, abs(b - c)) * clamp(result, -1.0, 1.0);
 }
 
 void main() {
@@ -150,13 +150,9 @@ void main() {
   bvec4 opposite = equal(neighbors, ivec4(pattern == 3 ? 4 : 3));
 
   bool isTriangle = pattern >= 3;
-  bool reject = any(bvec2(vertical && any(opposite.yw), horizontal && any(opposite.xz)));
-  if (isTriangle && reject) {
-    pattern = -pattern;
-  }
+  bool reject = isTriangle && any(bvec2(vertical && any(opposite.yw), horizontal && any(opposite.xz)));
 
   lowp vec4 result = vec4(0.0);
-  result.x = float(pattern + 4) / 8.0;
 
 #if SOFT_EDGES_SHARPENING
   lowp vec4 softEdges = vec4(
@@ -167,7 +163,14 @@ void main() {
   );
   result.y = quickPackFloats2(softEdges.xy * 0.5 + vec2(0.5));
   result.z = quickPackFloats2(softEdges.zw * 0.5 + vec2(0.5));
+
+  reject = reject || (dot(abs(softEdges), vec4(1.0)) > 1.5);
 #endif
 
+  if (reject) {
+    pattern = -pattern;
+  }
+
+  result.x = float(pattern + 4) / 8.0;
   gl_FragColor = result;
 }
