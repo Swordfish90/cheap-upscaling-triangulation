@@ -62,39 +62,44 @@ lowp float quickPackFloats2(lowp vec2 values) {
   return dot(floor(values * vec2(12.0) + vec2(0.5)), vec2(0.0625, 0.00390625));
 }
 
-lowp int findPattern(lowp vec4 values, lowp vec2 saddleAdjustments) {
-  lowp vec4 edgesDifferences = abs(values.xxyz - values.yzww);
+lowp int findPattern(lowp vec4 values, lowp vec2 diagonals) {
+  lowp vec4 edges = abs(values.ywzx - values.xywz);
+  lowp float contrast = max(max(edges.x, edges.y), max(edges.z, edges.w));
 
-  lowp vec4 patternContrasts = vec4(
-    edgesDifferences.x + edgesDifferences.w,
-    edgesDifferences.y + edgesDifferences.z,
-    max(edgesDifferences.x + edgesDifferences.z, edgesDifferences.y + edgesDifferences.w),
-    max(edgesDifferences.x + edgesDifferences.y, edgesDifferences.z + edgesDifferences.w)
-  );
+  lowp float diagonalContrast = max(max(edges.x + edges.y, edges.z + edges.w), max(edges.x + edges.w, edges.y + edges.z));
+  lowp float defaultContrast = max(edges.x + edges.z, edges.y + edges.w);
+  bool isContrastDiagonal = diagonalContrast >= defaultContrast;
 
-  patternContrasts.zw += clamp((saddleAdjustments.xy - saddleAdjustments.yx) * 0.125, vec2(-0.20), vec2(0.05));
+  lowp vec2 crossGradient = vec2(values.x - values.w, values.y - values.z);
+  lowp vec2 absCrossGradient = abs(crossGradient);
+  lowp vec2 diagonalsGradients = absCrossGradient + 0.25 * diagonals.yx;
+  bool isGradientDiagonal =
+  diagonalsGradients.x > 2.0 * diagonalsGradients.y ||
+  diagonalsGradients.y > 2.0 * diagonalsGradients.x;
 
-  lowp float maxContrast = max(
-    max(patternContrasts.x, patternContrasts.y),
-    max(patternContrasts.z, patternContrasts.w)
-  );
+  lowp int result = 0;
 
-  bvec4 isMax = greaterThanEqual(patternContrasts, vec4(maxContrast - EPSILON));
-  bool isSaddle = all(isMax);
-
-  if (maxContrast < EDGE_MIN_VALUE || isSaddle) {
-    return 0;
-  } else if (isMax.x) {
-    return 1;
-  } else if (isMax.y) {
-    return 2;
-  } else if (isMax.z) {
-    return 3;
-  } else if (isMax.w) {
-    return 4;
+  if (contrast < EDGE_MIN_VALUE) {
+    result = 0;
+  } else if (!isContrastDiagonal) {
+    if (crossGradient.x * crossGradient.y < 0.0) {
+      result = 1;
+    } else if (crossGradient.x * crossGradient.y > 0.0) {
+      result = 2;
+    }
+  } else {
+    if (diagonalsGradients.y > diagonalsGradients.x + EPSILON) {
+      result = 3;
+    } else if(diagonalsGradients.x > diagonalsGradients.y + EPSILON) {
+      result = 4;
+    }
   }
 
-  return 0;
+  if (!isContrastDiagonal && isGradientDiagonal) {
+    result = -result;
+  }
+
+  return result;
 }
 
 lowp float softEdgeWeight(lowp float a, lowp float b, lowp float c, lowp float d) {
@@ -181,6 +186,7 @@ void main() {
   );
 
   pattern = findPattern(vec4(l05, l06, l09, l10), diagonals);
+  pattern = pattern > 0 ? pattern : -pattern;
 
   if (pattern == 4) {
     edges = vec4(-edges.x, edges.w, -edges.z, edges.y);
