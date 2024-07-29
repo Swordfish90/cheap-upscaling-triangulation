@@ -106,7 +106,7 @@ lowp float softEdgeWeight(lowp float a, lowp float b, lowp float c, lowp float d
   lowp float result = 0.0;
   result += clamp(abs((2.0 * b - (a + c))) / abs(a - c), 0.0, 1.0);
   result -= clamp(abs((2.0 * c - (d + b))) / abs(b - d), 0.0, 1.0);
-  return step(EDGE_MIN_VALUE, abs(b - c)) * clamp(result, -1.0, 1.0);
+  return clamp(result, -1.0, 1.0);
 }
 
 lowp float hardEdgeWeight(lowp vec2 gn, lowp vec2 gs) {
