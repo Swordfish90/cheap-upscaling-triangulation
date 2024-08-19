@@ -62,26 +62,31 @@ lowp float quickPackFloats2(lowp vec2 values) {
   return dot(floor(values * vec2(12.0) + vec2(0.5)), vec2(0.0625, 0.00390625));
 }
 
-lowp int findPattern(lowp vec4 values, lowp vec2 diagonals) {
+lowp float maxOf(lowp vec4 values) {
+  return max(max(values.x, values.y), max(values.z, values.w));
+}
+
+lowp float minOf(lowp vec4 values) {
+  return min(min(values.x, values.y), min(values.z, values.w));
+}
+
+lowp int findPattern(lowp vec4 values, lowp vec2 diagonals, lowp float globalContrast) {
   lowp vec4 edges = abs(values.ywzx - values.xywz);
-  lowp float contrast = max(max(edges.x, edges.y), max(edges.z, edges.w));
 
   lowp float diagonalContrast = max(max(edges.x + edges.y, edges.z + edges.w), max(edges.x + edges.w, edges.y + edges.z));
-  lowp float defaultContrast = max(edges.x + edges.z, edges.y + edges.w);
-  bool isContrastDiagonal = diagonalContrast >= defaultContrast;
+  lowp float orthogonalContrast = max(edges.x + edges.z, edges.y + edges.w);
+  bool isDiagonal = diagonalContrast >= orthogonalContrast;
 
   lowp vec2 crossGradient = vec2(values.x - values.w, values.y - values.z);
   lowp vec2 absCrossGradient = abs(crossGradient);
-  lowp vec2 diagonalsGradients = absCrossGradient + 0.25 * diagonals.yx;
-  bool isGradientDiagonal =
-    diagonalsGradients.x > 2.0 * diagonalsGradients.y ||
-    diagonalsGradients.y > 2.0 * diagonalsGradients.x;
+  lowp vec2 diagonalsGradients = absCrossGradient + 0.25 * diagonals;
+
+  lowp float localContrast = maxOf(values) - minOf(values);
 
   lowp int result = 0;
-
-  if (contrast < EDGE_MIN_VALUE) {
+  if (localContrast < EDGE_MIN_VALUE) {
     result = 0;
-  } else if (!isContrastDiagonal) {
+  } else if (!isDiagonal) {
     if (crossGradient.x * crossGradient.y < 0.0) {
       result = 1;
     } else if (crossGradient.x * crossGradient.y > 0.0) {
@@ -95,7 +100,7 @@ lowp int findPattern(lowp vec4 values, lowp vec2 diagonals) {
     }
   }
 
-  if (!isContrastDiagonal && isGradientDiagonal) {
+  if (2.0 * localContrast < globalContrast) {
     result = -result;
   }
 
@@ -136,18 +141,30 @@ void main() {
   lowp float l13 = luma(t13);
   lowp float l14 = luma(t14);
 
-  lowp vec2 diagonals = vec2(
-    abs(l08 - l05) + abs(l13 - l10) + abs(l10 - l07) + abs(l05 - l02),
-    abs(l06 - l01) + abs(l09 - l04) + abs(l11 - l06) + abs(l14 - l09)
+  lowp float maxLuma = max(
+    max(maxOf(vec4(l01, l02, l04, l05)), maxOf(vec4(l06, l07, l08, l09))),
+    maxOf(vec4(l10, l11, l13, l14))
   );
 
-  lowp int pattern = findPattern(vec4(l05, l06, l09, l10), diagonals);
+  lowp float minLuma = min(
+    min(minOf(vec4(l01, l02, l04, l05)), minOf(vec4(l06, l07, l08, l09))),
+    minOf(vec4(l10, l11, l13, l14))
+  );
+
+  lowp float globalContrast = maxLuma - minLuma;
+
+  lowp vec2 diagonals = vec2(
+    abs(l06 - l01) + abs(l09 - l04) + abs(l11 - l06) + abs(l14 - l09),
+    abs(l08 - l05) + abs(l13 - l10) + abs(l10 - l07) + abs(l05 - l02)
+  );
+
+  lowp int pattern = findPattern(vec4(l05, l06, l09, l10), diagonals, globalContrast);
 
   lowp ivec4 neighbors = ivec4(
-    findPattern(vec4(l01, l02, l05, l06), vec2(0.0)),
-    findPattern(vec4(l06, l07, l10, l11), vec2(0.0)),
-    findPattern(vec4(l09, l10, l13, l14), vec2(0.0)),
-    findPattern(vec4(l04, l05, l08, l09), vec2(0.0))
+    findPattern(vec4(l01, l02, l05, l06), vec2(0.0), globalContrast),
+    findPattern(vec4(l06, l07, l10, l11), vec2(0.0), globalContrast),
+    findPattern(vec4(l09, l10, l13, l14), vec2(0.0), globalContrast),
+    findPattern(vec4(l04, l05, l08, l09), vec2(0.0), globalContrast)
   );
 
   bool vertical = neighbors.x == 1 || neighbors.z == 1;

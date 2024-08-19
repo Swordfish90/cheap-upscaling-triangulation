@@ -74,8 +74,8 @@ lowp int findPattern(lowp vec4 values, lowp vec2 diagonals) {
   lowp vec2 absCrossGradient = abs(crossGradient);
   lowp vec2 diagonalsGradients = absCrossGradient + 0.25 * diagonals.yx;
   bool isGradientDiagonal =
-  diagonalsGradients.x > 2.0 * diagonalsGradients.y ||
-  diagonalsGradients.y > 2.0 * diagonalsGradients.x;
+    diagonalsGradients.x >= 2.0 * diagonalsGradients.y ||
+    diagonalsGradients.y >= 2.0 * diagonalsGradients.x;
 
   lowp int result = 0;
 
@@ -95,7 +95,7 @@ lowp int findPattern(lowp vec4 values, lowp vec2 diagonals) {
     }
   }
 
-  if (!isContrastDiagonal && isGradientDiagonal) {
+  if (isContrastDiagonal != isGradientDiagonal) {
     result = -result;
   }
 

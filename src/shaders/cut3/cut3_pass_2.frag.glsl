@@ -99,9 +99,10 @@ bvec2 quickUnpackBools2(lowp float value) {
 
 Flags parseFlags(lowp vec3 flagsPixel) {
   Flags flags;
-  flags.edgeWeight = vec4(
-    quickUnpackFloats2(flagsPixel.y + 0.001953125),
-    quickUnpackFloats2(flagsPixel.z + 0.001953125)
+  flags.edgeWeight = clamp(
+    vec4(quickUnpackFloats2(flagsPixel.y + 0.001953125), quickUnpackFloats2(flagsPixel.z + 0.001953125)),
+    EPSILON,
+    1.0 - EPSILON
   );
   bvec2 boolFlags = quickUnpackBools2(flagsPixel.x + 0.125);
   flags.triangle = boolFlags.x;
