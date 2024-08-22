@@ -42,6 +42,14 @@ varying HIGHP vec2 c11;
 varying HIGHP vec2 c13;
 varying HIGHP vec2 c14;
 
+lowp float maxOf(lowp vec4 values) {
+  return max(max(values.x, values.y), max(values.z, values.w));
+}
+
+lowp float minOf(lowp vec4 values) {
+  return min(min(values.x, values.y), min(values.z, values.w));
+}
+
 lowp float luma(lowp vec3 v) {
 #if EDGE_USE_FAST_LUMA
   lowp float result = v.g;
@@ -62,44 +70,65 @@ lowp float quickPackFloats2(lowp vec2 values) {
   return dot(floor(values * vec2(12.0) + vec2(0.5)), vec2(0.0625, 0.00390625));
 }
 
-lowp int findPattern(lowp vec4 values, lowp vec2 diagonals) {
-  lowp vec4 edges = abs(values.ywzx - values.xywz);
-  lowp float contrast = max(max(edges.x, edges.y), max(edges.z, edges.w));
+lowp vec4 relativeScores(lowp vec4 scores) {
+  return scores.xyzw - scores.yxwz;
+}
 
-  lowp float diagonalContrast = max(max(edges.x + edges.y, edges.z + edges.w), max(edges.x + edges.w, edges.y + edges.z));
-  lowp float defaultContrast = max(edges.x + edges.z, edges.y + edges.w);
-  bool isContrastDiagonal = diagonalContrast >= defaultContrast;
+struct Quad {
+  lowp vec4 scores;
+  lowp float localContrast;
+};
 
-  lowp vec2 crossGradient = vec2(values.x - values.w, values.y - values.z);
-  lowp vec2 absCrossGradient = abs(crossGradient);
-  lowp vec2 diagonalsGradients = absCrossGradient + 0.25 * diagonals.yx;
-  bool isGradientDiagonal =
-    diagonalsGradients.x >= 2.0 * diagonalsGradients.y ||
-    diagonalsGradients.y >= 2.0 * diagonalsGradients.x;
+Quad quad(lowp vec4 values) {
+  lowp vec4 edges = values.xyzx - values.ywwz;
+
+  Quad result;
+  result.scores = vec4(
+    abs(edges.x + edges.z),
+    abs(edges.w + edges.y),
+    max(abs(edges.x - edges.y), abs(edges.w - edges.z)),
+    max(abs(edges.x + edges.w), abs(edges.y + edges.z))
+  );
+  result.localContrast = maxOf(values) - minOf(values);
+  return result;
+}
+
+lowp int computePattern(lowp vec4 scores, lowp float localContrast) {
+  bool isDiagonal = max(scores.z, scores.w) > max(scores.x, scores.y);
 
   lowp int result = 0;
 
-  if (contrast < EDGE_MIN_VALUE) {
+  if (localContrast < EDGE_MIN_VALUE) {
     result = 0;
-  } else if (!isContrastDiagonal) {
-    if (crossGradient.x * crossGradient.y < 0.0) {
+  } else if (!isDiagonal) {
+    if (scores.x > scores.y + EPSILON) {
       result = 1;
-    } else if (crossGradient.x * crossGradient.y > 0.0) {
+    } else if (scores.y > scores.x + EPSILON) {
       result = 2;
     }
   } else {
-    if (diagonalsGradients.y > diagonalsGradients.x + EPSILON) {
+    if (scores.z > scores.w + EPSILON) {
       result = 3;
-    } else if(diagonalsGradients.x > diagonalsGradients.y + EPSILON) {
+    } else if (scores.w > scores.z + EPSILON) {
       result = 4;
     }
   }
 
-  if (isContrastDiagonal != isGradientDiagonal) {
-    result = -result;
-  }
-
   return result;
+}
+
+lowp int findPattern(Quad quad) {
+  return computePattern(quad.scores, quad.localContrast);
+}
+
+lowp int findPattern(Quad quads[5]) {
+  lowp vec4 scores = quads[0].scores;
+  lowp vec4 adjustments = vec4(0.0);
+  adjustments += relativeScores(quads[1].scores);
+  adjustments += relativeScores(quads[2].scores);
+  adjustments += relativeScores(quads[3].scores);
+  adjustments += relativeScores(quads[4].scores);
+  return computePattern(scores + 0.125 * adjustments, quads[0].localContrast);
 }
 
 lowp float softEdgeWeight(lowp float a, lowp float b, lowp float c, lowp float d) {
@@ -107,13 +136,6 @@ lowp float softEdgeWeight(lowp float a, lowp float b, lowp float c, lowp float d
   result += clamp(abs((2.0 * b - (a + c))) / abs(a - c), 0.0, 1.0);
   result -= clamp(abs((2.0 * c - (d + b))) / abs(b - d), 0.0, 1.0);
   return clamp(result, -1.0, 1.0);
-}
-
-lowp float hardEdgeWeight(lowp vec2 gn, lowp vec2 gs) {
-  lowp float result = 0.0;
-  result += step(2.0 * gn.y, gn.x) - step(2.0 * gn.x, gn.y);
-  result += step(2.0 * gs.x, gs.y) - step(2.0 * gs.y, gs.x);
-  return step(abs(result), 1.5) * clamp(0.5 * result, -0.5, +0.5);
 }
 
 lowp float hardEdgeWeight(lowp int cp, lowp int np, lowp int vertical, lowp int positiveDiagonal, lowp int negativeDiagonal) {
@@ -153,14 +175,16 @@ void main() {
   lowp float l13 = luma(t13);
   lowp float l14 = luma(t14);
 
-  lowp int pattern = findPattern(vec4(l05, l06, l09, l10), vec2(0.0));
+  Quad quads[5];
+  quads[0] = quad(vec4(l05, l06, l09, l10));
+  quads[1] = quad(vec4(l01, l02, l05, l06));
+  quads[2] = quad(vec4(l06, l07, l10, l11));
+  quads[3] = quad(vec4(l09, l10, l13, l14));
+  quads[4] = quad(vec4(l04, l05, l08, l09));
 
-  lowp ivec4 neighbors = ivec4(
-    findPattern(vec4(l01, l02, l05, l06), vec2(0.0)),
-    findPattern(vec4(l06, l07, l10, l11), vec2(0.0)),
-    findPattern(vec4(l09, l10, l13, l14), vec2(0.0)),
-    findPattern(vec4(l04, l05, l08, l09), vec2(0.0))
-  );
+  lowp int pattern = findPattern(quads[0]);
+
+  lowp ivec4 neighbors = ivec4(findPattern(quads[1]), findPattern(quads[2]), findPattern(quads[3]), findPattern(quads[4]));
 
   lowp vec4 edges = vec4(
     hardEdgeWeight(pattern, neighbors.x, 1, 4, 3),
@@ -180,12 +204,7 @@ void main() {
   edges = clamp(edges + softEdges, min(edges, softEdges), max(edges, softEdges));
 #endif
 
-  lowp vec2 diagonals = vec2(
-    abs(l08 - l05) + abs(l13 - l10) + abs(l10 - l07) + abs(l05 - l02),
-    abs(l06 - l01) + abs(l09 - l04) + abs(l11 - l06) + abs(l14 - l09)
-  );
-
-  pattern = findPattern(vec4(l05, l06, l09, l10), diagonals);
+  pattern = findPattern(quads);
   pattern = pattern > 0 ? pattern : -pattern;
 
   if (pattern == 4) {
