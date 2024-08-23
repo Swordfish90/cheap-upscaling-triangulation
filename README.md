@@ -50,7 +50,6 @@ The look of every variant can be customized with a set of parameters:
 #define STATIC_BLEND_SHARPNESS 0.5          // Sharpness level used when dynamic blending is disabled [0, 1]
 #define EDGE_USE_FAST_LUMA 0                // Use quick luma approximation in edge detection
 #define EDGE_MIN_VALUE 0.05                 // Minimum luma difference used in edge detection [0, 1]
-#define LUMA_ADJUST_GAMMA 0                 // Correct gamma to better approximate luma human perception
 
 // Available in CUT2 and CUT3
 #define SOFT_EDGES_SHARPENING 1             // Enable soft-edges sharpening

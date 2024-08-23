@@ -35,14 +35,11 @@ varying HIGHP vec2 c09;
 varying HIGHP vec2 c10;
 
 lowp float luma(lowp vec3 v) {
-  #if EDGE_USE_FAST_LUMA
+#if EDGE_USE_FAST_LUMA
   lowp float result = v.g;
-  #else
+#else
   lowp float result = dot(v, vec3(0.299, 0.587, 0.114));
-  #endif
-  #if LUMA_ADJUST_GAMMA
-  result = sqrt(result);
-  #endif
+#endif
   return result;
 }
 

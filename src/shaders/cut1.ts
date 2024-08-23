@@ -32,7 +32,6 @@ const CUT1_DEFINES = `
   #define STATIC_BLEND_SHARPNESS 1.0
   #define EDGE_USE_FAST_LUMA 0
   #define EDGE_MIN_VALUE 0.05
-  #define LUMA_ADJUST_GAMMA 0
 `
 
 export const CUT1_SHADERS = new Chain(

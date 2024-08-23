@@ -56,9 +56,6 @@ lowp float luma(lowp vec3 v) {
 #else
   lowp float result = dot(v, vec3(0.299, 0.587, 0.114));
 #endif
-#if LUMA_ADJUST_GAMMA
-  result = sqrt(result);
-#endif
   return result;
 }
 

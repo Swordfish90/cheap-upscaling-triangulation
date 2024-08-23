@@ -56,9 +56,6 @@ lowp float luma(lowp vec3 v) {
 #else
   lowp float result = dot(v, vec3(0.299, 0.587, 0.114));
 #endif
-#if LUMA_ADJUST_GAMMA
-  result = sqrt(result);
-#endif
   return result;
 }
 
@@ -202,8 +199,15 @@ void main() {
   bvec4 opposite = equal(neighbors, ivec4(pattern == 3 ? 4 : 3));
 
   bool isTriangle = pattern >= 3;
-  bool reject = isTriangle && any(bvec2(vertical && any(opposite.yw), horizontal && any(opposite.xz)));
-  if (reject) {
+  bool reject = any(
+    bvec3(
+      vertical && any(opposite.yw),
+      horizontal && any(opposite.xz),
+      vertical && horizontal
+    )
+  );
+
+  if (isTriangle && reject) {
     pattern = -pattern;
   }
 
