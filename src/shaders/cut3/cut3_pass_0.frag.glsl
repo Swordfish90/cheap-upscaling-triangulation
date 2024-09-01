@@ -67,10 +67,6 @@ lowp float quickPackFloats2(lowp vec2 values) {
   return dot(floor(values * vec2(12.0) + vec2(0.5)), vec2(0.0625, 0.00390625));
 }
 
-lowp vec4 relativeScores(lowp vec4 scores) {
-  return scores.xyzw - scores.yxwz;
-}
-
 struct Quad {
   lowp vec4 scores;
   lowp float localContrast;
@@ -90,11 +86,12 @@ Quad quad(lowp vec4 values) {
   return result;
 }
 
-lowp int computePattern(lowp vec4 scores, lowp float localContrast, lowp float globalContrast) {
+lowp int computePattern(lowp vec4 scores, lowp vec4 neighborsScores, lowp float localContrast, lowp float globalContrast) {
   bool isDiagonal = max(scores.z, scores.w) > max(scores.x, scores.y);
 
-  lowp int result = 0;
+  scores += 0.25 * neighborsScores;
 
+  lowp int result = 0;
   if (localContrast < EDGE_MIN_VALUE) {
     result = 0;
   } else if (!isDiagonal) {
@@ -119,17 +116,17 @@ lowp int computePattern(lowp vec4 scores, lowp float localContrast, lowp float g
 }
 
 lowp int findPattern(Quad quad, lowp float globalContrast) {
-  return computePattern(quad.scores, quad.localContrast, globalContrast);
+  return computePattern(quad.scores, vec4(0.0), quad.localContrast, globalContrast);
 }
 
 lowp int findPattern(Quad quads[5], lowp float globalContrast) {
   lowp vec4 scores = quads[0].scores;
   lowp vec4 adjustments = vec4(0.0);
-  adjustments += relativeScores(quads[1].scores);
-  adjustments += relativeScores(quads[2].scores);
-  adjustments += relativeScores(quads[3].scores);
-  adjustments += relativeScores(quads[4].scores);
-  return computePattern(scores + 0.125 * adjustments, quads[0].localContrast, globalContrast);
+  adjustments += quads[1].scores;
+  adjustments += quads[2].scores;
+  adjustments += quads[3].scores;
+  adjustments += quads[4].scores;
+  return computePattern(scores, adjustments, quads[0].localContrast, globalContrast);
 }
 
 lowp float softEdgeWeight(lowp float a, lowp float b, lowp float c, lowp float d) {
