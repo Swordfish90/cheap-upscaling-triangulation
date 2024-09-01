@@ -56,7 +56,8 @@ The look of every variant can be customized with a set of parameters:
 #define SOFT_EDGES_SHARPENING_AMOUNT 0.75   // Maximum size reduction of soft-edges pixels (antialiased pixels) [0, 1]
 
 // Available in CUT3
-#define MAX_SEARCH_DISTANCE 8               // Maximum search distance in each direction (N,E,S,W) to find a continuous edge [1, ∞[ 
+#define SEARCH_MIN_CONTRAST 0.5             // Minimum relative contrast for search to include current pattern [0, 1]
+#define SEARCH_MAX_DISTANCE 8               // Maximum search distance in each direction (N,E,S,W) to find a continuous edge [1, ∞[
 ```
 
 ## Performances

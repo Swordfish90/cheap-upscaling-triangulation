@@ -38,7 +38,8 @@ const CUT3_DEFINES = `
   #define EDGE_MIN_VALUE                0.025
   #define SOFT_EDGES_SHARPENING         1
   #define SOFT_EDGES_SHARPENING_AMOUNT  0.875
-  #define MAX_SEARCH_DISTANCE           8
+  #define SEARCH_MIN_CONTRAST           0.66
+  #define SEARCH_MAX_DISTANCE           8
 `
 
 export const CUT3_SHADERS = new Chain(

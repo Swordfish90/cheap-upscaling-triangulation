@@ -108,7 +108,7 @@ lowp int computePattern(lowp vec4 scores, lowp vec4 neighborsScores, lowp float 
     }
   }
 
-  if (2.0 * localContrast < globalContrast) {
+  if ((1.0 / SEARCH_MIN_CONTRAST) * localContrast < globalContrast) {
     result = -result;
   }
 
@@ -163,24 +163,18 @@ void main() {
   lowp float l13 = luma(t13);
   lowp float l14 = luma(t14);
 
-  lowp float maxLuma = max(
-    max(maxOf(vec4(l01, l02, l04, l05)), maxOf(vec4(l06, l07, l08, l09))),
-    maxOf(vec4(l10, l11, l13, l14))
-  );
-
-  lowp float minLuma = min(
-    min(minOf(vec4(l01, l02, l04, l05)), minOf(vec4(l06, l07, l08, l09))),
-    minOf(vec4(l10, l11, l13, l14))
-  );
-
-  lowp float globalContrast = maxLuma - minLuma;
-
   Quad quads[5];
   quads[0] = quad(vec4(l05, l06, l09, l10));
   quads[1] = quad(vec4(l01, l02, l05, l06));
   quads[2] = quad(vec4(l06, l07, l10, l11));
   quads[3] = quad(vec4(l09, l10, l13, l14));
   quads[4] = quad(vec4(l04, l05, l08, l09));
+
+  lowp float globalContrast = max(
+    max(quads[0].localContrast, quads[1].localContrast),
+    max(quads[2].localContrast, quads[3].localContrast)
+  );
+  globalContrast = max(globalContrast, quads[4].localContrast);
 
   lowp int pattern = findPattern(quads, globalContrast);
 

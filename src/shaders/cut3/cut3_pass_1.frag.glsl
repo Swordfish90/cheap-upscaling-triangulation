@@ -27,7 +27,7 @@ precision lowp float;
 
 #define EPSILON 0.02
 
-const lowp float STEP = 0.5 / float(MAX_SEARCH_DISTANCE);
+const lowp float STEP = 0.5 / float(SEARCH_MAX_DISTANCE);
 const lowp float HSTEP = (STEP * 0.5);
 
 uniform lowp sampler2D previousPass;
@@ -86,7 +86,7 @@ lowp vec2 walk(
   lowp int continuePattern
 ) {
   lowp vec2 result = vec2(0.0, 0.0);
-  for (lowp int i = 1; i <= MAX_SEARCH_DISTANCE; i++) {
+  for (lowp int i = 1; i <= SEARCH_MAX_DISTANCE; i++) {
     HIGHP vec2 coords = baseCoords + direction * float(i);
     lowp int currentPattern = fetchPattern(texture2D(previousPass, coords).x);
 
@@ -108,8 +108,8 @@ lowp vec2 walk(
 }
 
 lowp float blendWeights(lowp vec2 d1, lowp vec2 d2) {
-  const float MAX_DOUBLE_DISTANCE = float(MAX_SEARCH_DISTANCE) * STEP;
-  const float MAX_DISTANCE = STEP * float(MAX_SEARCH_DISTANCE / 2) + HSTEP;
+  const float MAX_DOUBLE_DISTANCE = float(SEARCH_MAX_DISTANCE) * STEP;
+  const float MAX_DISTANCE = STEP * float(SEARCH_MAX_DISTANCE / 2) + HSTEP;
 
   lowp float result = 0.0;
 
