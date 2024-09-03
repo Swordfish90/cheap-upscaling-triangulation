@@ -35,7 +35,7 @@ const CUT2_DEFINES = `
   #define EDGE_USE_FAST_LUMA            0
   #define EDGE_MIN_VALUE                0.025
   #define SOFT_EDGES_SHARPENING         1
-  #define SOFT_EDGES_SHARPENING_AMOUNT  0.875
+  #define SOFT_EDGES_SHARPENING_AMOUNT  1.00
 `
 
 export const CUT2_SHADERS = new Chain(

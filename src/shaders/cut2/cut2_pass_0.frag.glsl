@@ -127,9 +127,9 @@ lowp int findPattern(Quad quads[5]) {
 
 lowp float softEdgeWeight(lowp float a, lowp float b, lowp float c, lowp float d) {
   lowp float result = 0.0;
-  result += clamp(abs((2.0 * b - (a + c))) / abs(a - c), 0.0, 1.0);
-  result -= clamp(abs((2.0 * c - (d + b))) / abs(b - d), 0.0, 1.0);
-  return clamp(result, -1.0, 1.0);
+  result += clamp((abs(b - c) / (abs(a - c) + EPSILON)), 0.0, 1.0);
+  result -= clamp((abs(c - b) / (abs(b - d) + EPSILON)), 0.0, 1.0);
+  return clamp(2.0 * result, -1.0, 1.0);
 }
 
 lowp float hardEdgeWeight(lowp int cp, lowp int np, lowp int vertical, lowp int positiveDiagonal, lowp int negativeDiagonal) {
