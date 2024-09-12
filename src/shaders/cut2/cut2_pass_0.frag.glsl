@@ -69,7 +69,6 @@ lowp float quickPackFloats2(lowp vec2 values) {
 
 struct Quad {
   lowp vec4 scores;
-  lowp float localContrast;
 };
 
 Quad quad(lowp vec4 values) {
@@ -82,28 +81,25 @@ Quad quad(lowp vec4 values) {
     max(abs(edges.x - edges.y), abs(edges.w - edges.z)),
     max(abs(edges.x + edges.w), abs(edges.y + edges.z))
   );
-  result.localContrast = maxOf(values) - minOf(values);
   return result;
 }
 
-lowp int computePattern(lowp vec4 scores, lowp vec4 neighborsScores, lowp float localContrast) {
+lowp int computePattern(lowp vec4 scores, lowp vec4 neighborsScores) {
   bool isDiagonal = max(scores.z, scores.w) > max(scores.x, scores.y);
 
   scores += 0.25 * neighborsScores;
 
   lowp int result = 0;
-  if (localContrast < EDGE_MIN_VALUE) {
-    result = 0;
-  } else if (!isDiagonal) {
-    if (scores.x > scores.y + EPSILON) {
+  if (!isDiagonal) {
+    if (scores.x > scores.y + EDGE_MIN_VALUE) {
       result = 1;
-    } else if (scores.y > scores.x + EPSILON) {
+    } else if (scores.y > scores.x + EDGE_MIN_VALUE) {
       result = 2;
     }
   } else {
-    if (scores.z > scores.w + EPSILON) {
+    if (scores.z > scores.w + EDGE_MIN_VALUE) {
       result = 3;
-    } else if (scores.w > scores.z + EPSILON) {
+    } else if (scores.w > scores.z + EDGE_MIN_VALUE) {
       result = 4;
     }
   }
@@ -112,17 +108,16 @@ lowp int computePattern(lowp vec4 scores, lowp vec4 neighborsScores, lowp float 
 }
 
 lowp int findPattern(Quad quad) {
-  return computePattern(quad.scores, vec4(0.0), quad.localContrast);
+  return computePattern(quad.scores, vec4(0.0));
 }
 
 lowp int findPattern(Quad quads[5]) {
-  lowp vec4 scores = quads[0].scores;
   lowp vec4 adjustments = vec4(0.0);
   adjustments += quads[1].scores;
   adjustments += quads[2].scores;
   adjustments += quads[3].scores;
   adjustments += quads[4].scores;
-  return computePattern(scores, adjustments, quads[0].localContrast);
+  return computePattern(quads[0].scores, adjustments);
 }
 
 lowp float softEdgeWeight(lowp float a, lowp float b, lowp float c, lowp float d) {

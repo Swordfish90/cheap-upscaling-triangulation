@@ -35,7 +35,7 @@ const CUT3_DEFINES = `
   #define BLEND_MAX_SHARPNESS           0.75
   #define STATIC_BLEND_SHARPNESS        0.00
   #define EDGE_USE_FAST_LUMA            0
-  #define EDGE_MIN_VALUE                0.025
+  #define EDGE_MIN_VALUE                0.05
   #define SOFT_EDGES_SHARPENING         1
   #define SOFT_EDGES_SHARPENING_AMOUNT  1.00
   #define SEARCH_MIN_CONTRAST           0.85
