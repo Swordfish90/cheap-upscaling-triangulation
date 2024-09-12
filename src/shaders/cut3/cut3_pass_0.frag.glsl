@@ -86,47 +86,41 @@ Quad quad(lowp vec4 values) {
   return result;
 }
 
-lowp int computePattern(lowp vec4 scores, lowp vec4 neighborsScores, lowp float localContrast, lowp float globalContrast) {
+lowp int computePattern(lowp vec4 scores, lowp vec4 neighborsScores) {
   bool isDiagonal = max(scores.z, scores.w) > max(scores.x, scores.y);
 
   scores += 0.25 * neighborsScores;
 
   lowp int result = 0;
-  if (localContrast < EDGE_MIN_VALUE) {
-    result = 0;
-  } else if (!isDiagonal) {
-    if (scores.x > scores.y + EPSILON) {
+  if (!isDiagonal) {
+    if (scores.x > scores.y + EDGE_MIN_VALUE) {
       result = 1;
-    } else if (scores.y > scores.x + EPSILON) {
+    } else if (scores.y > scores.x + EDGE_MIN_VALUE) {
       result = 2;
     }
   } else {
-    if (scores.z > scores.w + EPSILON) {
+    if (scores.z > scores.w + EDGE_MIN_VALUE) {
       result = 3;
-    } else if (scores.w > scores.z + EPSILON) {
+    } else if (scores.w > scores.z + EDGE_MIN_VALUE) {
       result = 4;
     }
-  }
-
-  if ((1.0 / SEARCH_MIN_CONTRAST) * localContrast < globalContrast) {
-    result = -result;
   }
 
   return result;
 }
 
-lowp int findPattern(Quad quad, lowp float globalContrast) {
-  return computePattern(quad.scores, vec4(0.0), quad.localContrast, globalContrast);
+lowp int findPattern(Quad quad) {
+  return computePattern(quad.scores, vec4(0.0));
 }
 
-lowp int findPattern(Quad quads[5], lowp float globalContrast) {
+lowp int findPattern(Quad quads[5]) {
   lowp vec4 scores = quads[0].scores;
   lowp vec4 adjustments = vec4(0.0);
   adjustments += quads[1].scores;
   adjustments += quads[2].scores;
   adjustments += quads[3].scores;
   adjustments += quads[4].scores;
-  return computePattern(scores, adjustments, quads[0].localContrast, globalContrast);
+  return computePattern(scores, adjustments);
 }
 
 lowp float softEdgeWeight(lowp float a, lowp float b, lowp float c, lowp float d) {
@@ -170,35 +164,34 @@ void main() {
   quads[3] = quad(vec4(l09, l10, l13, l14));
   quads[4] = quad(vec4(l04, l05, l08, l09));
 
-  lowp float globalContrast = max(
-    max(quads[0].localContrast, quads[1].localContrast),
-    max(quads[2].localContrast, quads[3].localContrast)
-  );
-  globalContrast = max(globalContrast, quads[4].localContrast);
+  lowp int pattern = findPattern(quads);
 
-  lowp int pattern = findPattern(quads, globalContrast);
-
-  lowp ivec4 neighbors = ivec4(
-    findPattern(quads[1], globalContrast),
-    findPattern(quads[2], globalContrast),
-    findPattern(quads[3], globalContrast),
-    findPattern(quads[4], globalContrast)
+  lowp vec4 neighborContrasts = max(
+    vec4(quads[0].localContrast),
+    vec4(quads[1].localContrast, quads[2].localContrast, quads[3].localContrast, quads[4].localContrast)
   );
 
-  bool vertical = neighbors.x == 1 || neighbors.z == 1;
-  bool horizontal = neighbors.y == 2 || neighbors.w == 2;
-  bvec4 opposite = equal(neighbors, ivec4(pattern == 3 ? 4 : 3));
+  lowp vec4 mainValues = vec4(l05, l06, l09, l10);
+  lowp vec4 mainEdges = abs(mainValues.xyzx - mainValues.ywwz);
+  bvec4 neighborConnections = greaterThanEqual(mainEdges, SEARCH_MIN_CONTRAST * neighborContrasts);
 
+  lowp ivec4 neighborPatterns = ivec4(
+    findPattern(quads[1]),
+    findPattern(quads[2]),
+    findPattern(quads[3]),
+    findPattern(quads[4])
+  );
+  neighborPatterns *= ivec4(neighborConnections);
+
+  bool vertical = any(equal(neighborPatterns.xz, ivec2(1)));
+  bool horizontal = any(equal(neighborPatterns.yw, ivec2(2)));
+  bool corner = vertical && horizontal;
+  bool opposite = any(equal(neighborPatterns, ivec4(pattern == 3 ? 4 : 3)));
   bool isTriangle = pattern >= 3;
-  bool reject = any(
-    bvec3(
-      vertical && any(opposite.yw),
-      horizontal && any(opposite.xz),
-      vertical && horizontal
-    )
-  );
 
-  if (isTriangle && reject) {
+  bool reject = (isTriangle && (opposite || corner)) || !any(neighborConnections);
+
+  if (reject) {
     pattern = -pattern;
   }
 
