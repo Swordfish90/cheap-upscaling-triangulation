@@ -136,65 +136,46 @@ lowp float adjustMidpoint(lowp float x, lowp float midPoint) {
 lowp vec3 blend(lowp vec3 a, lowp vec3 b, lowp float t, lowp float midPoint, lowp float baseSharpness) {
   lowp float sharpness = baseSharpness * sharpness(luma(a), luma(b));
   lowp float nt = adjustMidpoint(t, midPoint);
-  nt = clamp((nt - sharpness) / (1.0 - 2.0 * sharpness + EPSILON), 0.0 , 1.0);
+  nt = clamp((nt - sharpness) / (1.0 - 2.0 * sharpness), 0.0 , 1.0);
   return mix(a, b, nt);
-}
-
-ShapeWeights triangleWeights(lowp vec2 pxCoords, lowp vec2 edgeWeights, lowp float diagonalWeight) {
-  ShapeWeights result;
-  lowp float m = edgeWeights.x;
-  lowp float n = edgeWeights.y;
-  lowp float a = (n * m + pxCoords.y * (1.0 - m - n)) / (n * m + pxCoords.x * (1.0 - m - n) + EPSILON);
-  lowp vec2 projections = vec2((pxCoords.y -a * pxCoords.x), (1.0 - pxCoords.y) / a + pxCoords.x);
-  result.weights = vec3(projections.x, projections.y, pxCoords.x / (projections.y + EPSILON));
-  result.midPoints = vec3(m, n, diagonalWeight);
-  return result;
-}
-
-ShapeWeights quadWeights(lowp vec2 pxCoords, lowp vec4 edgeWeights) {
-  ShapeWeights result;
-  lowp vec2 splits = vec2(
-    mix(edgeWeights.x, edgeWeights.z, pxCoords.y),
-    mix(edgeWeights.w, edgeWeights.y, pxCoords.x)
-  );
-  result.weights = pxCoords.xxy;
-  result.midPoints = splits.xxy;
-  return result;
-}
-
-lowp float triangleDiagonalWeight(lowp vec4 edgeWeights) {
-  lowp float d1 = max(edgeWeights.x, edgeWeights.w);
-  lowp float d2 = 1.0 - min(edgeWeights.y, edgeWeights.z);
-  return 0.5 * (1.0 + d1 - d2);
 }
 
 Pattern pattern(Pixels pixels, lowp vec4 edgeWeights, bool triangle, lowp vec2 pxCoords) {
   Pattern result;
 
-  bool firstTriangle = triangle && pxCoords.x <= pxCoords.y;
-  bool secondTriangle = triangle && pxCoords.x >= 1.0 - (1.0 - pxCoords.y);
+  bool firstTriangle = triangle && pxCoords.x + pxCoords.y <= 1.0;
+  bool secondTriangle = triangle && !firstTriangle;
 
-  ShapeWeights shapeWeights;
+  lowp vec2 midPoints = vec2(0.0);
 
-  if (triangle) {
-    shapeWeights = triangleWeights(
-      firstTriangle ? pxCoords : pxCoords.yx,
-      firstTriangle ? edgeWeights.wz : edgeWeights.xy,
-      triangleDiagonalWeight(edgeWeights)
-    );
-  } else {
-    shapeWeights = quadWeights(pxCoords, edgeWeights);
+  if (secondTriangle) {
+    pxCoords = vec2(1.0 - pxCoords.y, 1.0 - pxCoords.x);
+    pixels = Pixels(pixels.p3, pixels.p1, pixels.p2, pixels.p0);
+    edgeWeights = vec4(1.0) - edgeWeights.yxwz;
   }
 
-  result.weights = shapeWeights.weights;
-  result.midPoints = shapeWeights.midPoints;
-  result.baseSharpness = vec3(1.0, 1.0, float(!triangle));
+  if (triangle) {
+    lowp float coordsSum = pxCoords.x + pxCoords.y;
+    midPoints = vec2(
+      edgeWeights.x * edgeWeights.w * coordsSum / (edgeWeights.w * pxCoords.x + edgeWeights.x * pxCoords.y),
+      0.5 + 0.5 * clamp(-edgeWeights.x + edgeWeights.y - edgeWeights.z + edgeWeights.w, -1.0, 1.0)
+    );
+    pxCoords = vec2(coordsSum, pxCoords.y / coordsSum);
+  } else {
+    midPoints = vec2(
+      mix(edgeWeights.x, edgeWeights.z, pxCoords.y),
+      mix(edgeWeights.w, edgeWeights.y, pxCoords.x)
+    );
+  }
 
+  result.weights = pxCoords.xxy;
+  result.midPoints = midPoints.xxy;
+  result.baseSharpness = vec3(1.0, 1.0, float(!triangle));
   result.pixels = Pixels(
     pixels.p0,
-    firstTriangle ? pixels.p2 : pixels.p1,
-    secondTriangle ? pixels.p1 : pixels.p2,
-    pixels.p3
+    pixels.p1,
+    triangle ? pixels.p0 : pixels.p2,
+    triangle ? pixels.p2 : pixels.p3
   );
 
   return result;

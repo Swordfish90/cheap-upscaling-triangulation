@@ -182,12 +182,12 @@ void main() {
 #endif
 
   lowp int originalPattern = pattern >= 0 ? pattern : -pattern;
-  if (originalPattern == 4) {
+  if (originalPattern == 3) {
     edges = vec4(-edges.x, edges.w, -edges.z, edges.y);
   }
 
   gl_FragColor = vec4(
-    quickPackBools2(bvec2(originalPattern >= 3, originalPattern == 4)),
+    quickPackBools2(bvec2(originalPattern >= 3, originalPattern == 3)),
     quickPackFloats2(edges.xy * 0.5 + vec2(0.5)),
     quickPackFloats2(edges.zw * 0.5 + vec2(0.5)),
     1.0
