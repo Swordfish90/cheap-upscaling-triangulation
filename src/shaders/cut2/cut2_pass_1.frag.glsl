@@ -172,10 +172,10 @@ Pattern pattern(Pixels pixels, lowp vec4 edgeWeights, bool triangle, lowp vec2 p
   result.midPoints = midPoints.xxy;
   result.baseSharpness = vec3(1.0, 1.0, float(!triangle));
   result.pixels = Pixels(
-  pixels.p0,
-  pixels.p1,
-  triangle ? pixels.p0 : pixels.p2,
-  triangle ? pixels.p2 : pixels.p3
+    pixels.p0,
+    pixels.p1,
+    triangle ? pixels.p0 : pixels.p2,
+    triangle ? pixels.p2 : pixels.p3
   );
 
   return result;
