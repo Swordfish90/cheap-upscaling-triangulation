@@ -9,16 +9,16 @@ In order to achieve this, we need to **CUT some corners**... Literally!
 
 ## Algorithms
 
-The family is composed of three algorithms **CUT1**, **CUT2** and **CUT3**, which share the same basic steps:
-* **Triangulation**: Inspired by the method in [1], we analyze the luma plane of each 2x2 square to identify if the square has a vertical, horizontal, or diagonal orientation. In this last case we split the square into two triangles.
-* **Pattern Recognition**: We examine neighboring samples and the results of the triangulation to create an interpolation function for each side of the square.
-* **Interpolation**: We use the triangulation and the function on each side to interpolate colors within the square or triangles.
+The family is made by three algorithms **CUT1**, **CUT2** and **CUT3**, that share the same fundamental steps:
+* **Triangulation**: Inspired by the method in [1], we analyze the luma plane of each 2x2 square to determine whether it has a vertical, horizontal, or diagonal orientation.  For diagonal orientations, we split the square into two triangles.
+* **Pattern Recognition**: We examine neighboring samples and the results from the triangulation to create an interpolation function for each side of the square.
+* **Interpolation**: Using the triangulation and the side-specific interpolation functions, we interpolate colors within the square or triangles.
 
 The three algorithms have different levels of quality and features:
-* **Passes**: Number of passes required to render the final image. Except the last one, every step outputs a buffer with the same resolution as the input image.
-* **Samples**: Number of texture samples read from the original image.
-* **Angle Resolution**: The minimal angle the algorithm is able to correctly represent. Using an approach similar to [2] CUT3 is able to follow those edges.
-* **Soft Edges**: CUT2 and CUT3 are also able to improve the definition of edges which are wider than one pixel. This greatly helps with anti-aliased content.
+* **Passes**: Number of passes required to render the final image. Except for the last pass, each step outputs a buffer with the same resolution as the input image.
+* **Samples**: Number of texture samples.
+* **Angle Resolution**: The minimal angle the algorithm can accurately represent. Using an approach similar to [2], CUT3 can follow these edges more precisely.
+* **Soft Edges**: CUT2 and CUT3 enhance the definition of edges wider than one pixel, significantly improving the handling of anti-aliased content.
 
 | Algorithm                    | Passes | Samples                | Angle Resolution | Soft-Edges Handling |
 |------------------------------|--------|------------------------|------------------|---------------------|
@@ -28,7 +28,7 @@ The three algorithms have different levels of quality and features:
 
 * I: Input image resolution
 * O: Output image resolution
-* D: Edge search distance in each direction (this is tied to angle resolution)
+* D: Edge search distance in each direction (tied to angle resolution)
 
 ## Results
 
