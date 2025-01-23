@@ -191,10 +191,6 @@ void main() {
 
   bool reject = (isTriangle && (opposite || corner)) || !any(neighborConnections);
 
-  if (reject) {
-    pattern = -pattern;
-  }
-
   lowp vec4 result = vec4(0.0);
 
 #if SOFT_EDGES_SHARPENING
@@ -204,9 +200,17 @@ void main() {
     softEdgeWeight(l08, l09, l10, l11),
     softEdgeWeight(l01, l05, l09, l13)
   );
+
+  lowp float softEdgesStrength = dot(abs(softEdges), vec4(1.0));
+  reject = reject || softEdgesStrength > 2.0;
+
   result.y = quickPackFloats2(softEdges.xy * 0.5 + vec2(0.5));
   result.z = quickPackFloats2(softEdges.zw * 0.5 + vec2(0.5));
 #endif
+
+  if (reject) {
+    pattern = -pattern;
+  }
 
   result.x = float(pattern + 4) / 8.0;
   gl_FragColor = result;

@@ -38,7 +38,7 @@ const CUT3_DEFINES = `
   #define EDGE_MIN_VALUE                0.025
   #define SOFT_EDGES_SHARPENING         1
   #define SOFT_EDGES_SHARPENING_AMOUNT  1.00
-  #define SEARCH_MIN_CONTRAST           0.85
+  #define SEARCH_MIN_CONTRAST           0.50
   #define SEARCH_MAX_DISTANCE           8
 `
 
