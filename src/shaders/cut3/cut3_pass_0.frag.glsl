@@ -87,7 +87,10 @@ Quad quad(lowp vec4 values) {
 }
 
 lowp int computePattern(lowp vec4 scores, lowp vec4 neighborsScores) {
-  bool isDiagonal = max(scores.z, scores.w) > max(scores.x, scores.y);
+  lowp float maxOrthogonal = max(scores.x, scores.y);
+  lowp float maxDiagonal = max(scores.z, scores.w);
+
+  bool isDiagonal = maxDiagonal > maxOrthogonal;
 
   scores += 0.25 * neighborsScores;
 
@@ -104,6 +107,11 @@ lowp int computePattern(lowp vec4 scores, lowp vec4 neighborsScores) {
     } else if (scores.w > scores.z + EDGE_MIN_VALUE) {
       result = 4;
     }
+  }
+
+  lowp vec2 maxScores = isDiagonal ? vec2(maxOrthogonal, maxDiagonal) : vec2(maxDiagonal, maxOrthogonal);
+  if (maxScores.y <= max((1.0 + HARD_EDGES_THRESHOLD) * maxScores.x, EDGE_MIN_VALUE)) {
+    result = -result;
   }
 
   return result;
@@ -125,8 +133,9 @@ lowp int findPattern(Quad quads[5]) {
 
 lowp float softEdgeWeight(lowp float a, lowp float b, lowp float c, lowp float d) {
   lowp float result = 0.0;
-  result += clamp((abs(b - c) / (abs(a - c) + EPSILON)), 0.0, 1.0);
-  result -= clamp((abs(c - b) / (abs(b - d) + EPSILON)), 0.0, 1.0);
+  lowp float diff = abs(b - c);
+  result += (diff / clamp(abs(a - c), diff + EPSILON, 1.0));
+  result -= (diff / clamp(abs(b - d), diff + EPSILON, 1.0));
   return clamp(2.0 * result, -1.0, 1.0);
 }
 
@@ -173,7 +182,7 @@ void main() {
 
   lowp vec4 mainValues = vec4(l05, l06, l09, l10);
   lowp vec4 mainEdges = abs(mainValues.xyzx - mainValues.ywwz);
-  bvec4 neighborConnections = greaterThanEqual(mainEdges, SEARCH_MIN_CONTRAST * neighborContrasts);
+  bvec4 neighborConnections = greaterThanEqual(mainEdges, HARD_EDGES_SEARCH_MIN_CONTRAST * neighborContrasts);
 
   lowp ivec4 neighborPatterns = ivec4(
     findPattern(quads[1]),
@@ -201,14 +210,11 @@ void main() {
     softEdgeWeight(l01, l05, l09, l13)
   );
 
-  lowp float softEdgesStrength = dot(abs(softEdges), vec4(1.0));
-  reject = reject || softEdgesStrength > 2.0;
-
   result.y = quickPackFloats2(softEdges.xy * 0.5 + vec2(0.5));
   result.z = quickPackFloats2(softEdges.zw * 0.5 + vec2(0.5));
 #endif
 
-  if (reject) {
+  if (pattern > 0 && reject) {
     pattern = -pattern;
   }
 

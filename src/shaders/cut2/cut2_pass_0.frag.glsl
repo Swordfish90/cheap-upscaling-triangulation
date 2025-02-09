@@ -85,7 +85,10 @@ Quad quad(lowp vec4 values) {
 }
 
 lowp int computePattern(lowp vec4 scores, lowp vec4 neighborsScores) {
-  bool isDiagonal = max(scores.z, scores.w) > max(scores.x, scores.y);
+  lowp float maxOrthogonal = max(scores.x, scores.y);
+  lowp float maxDiagonal = max(scores.z, scores.w);
+
+  bool isDiagonal = maxDiagonal > maxOrthogonal;
 
   scores += 0.25 * neighborsScores;
 
@@ -102,6 +105,11 @@ lowp int computePattern(lowp vec4 scores, lowp vec4 neighborsScores) {
     } else if (scores.w > scores.z + EDGE_MIN_VALUE) {
       result = 4;
     }
+  }
+
+  lowp vec2 maxScores = isDiagonal ? vec2(maxOrthogonal, maxDiagonal) : vec2(maxDiagonal, maxOrthogonal);
+  if (maxScores.y <= max((1.0 + HARD_EDGES_THRESHOLD) * maxScores.x, EDGE_MIN_VALUE)) {
+    result = -result;
   }
 
   return result;

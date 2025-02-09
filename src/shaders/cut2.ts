@@ -34,6 +34,7 @@ const CUT2_DEFINES = `
   #define STATIC_BLEND_SHARPNESS        0.00
   #define EDGE_USE_FAST_LUMA            0
   #define EDGE_MIN_VALUE                0.025
+  #define HARD_EDGES_THRESHOLD          0.20
   #define SOFT_EDGES_SHARPENING         1
   #define SOFT_EDGES_SHARPENING_AMOUNT  1.00
 `
