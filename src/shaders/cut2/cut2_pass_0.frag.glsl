@@ -46,10 +46,6 @@ lowp float maxOf(lowp vec4 values) {
   return max(max(values.x, values.y), max(values.z, values.w));
 }
 
-lowp float minOf(lowp vec4 values) {
-  return min(min(values.x, values.y), min(values.z, values.w));
-}
-
 lowp float luma(lowp vec3 v) {
 #if EDGE_USE_FAST_LUMA
   lowp float result = v.g;

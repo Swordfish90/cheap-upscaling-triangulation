@@ -46,10 +46,6 @@ lowp float maxOf(lowp vec4 values) {
   return max(max(values.x, values.y), max(values.z, values.w));
 }
 
-lowp float minOf(lowp vec4 values) {
-  return min(min(values.x, values.y), min(values.z, values.w));
-}
-
 lowp float luma(lowp vec3 v) {
 #if EDGE_USE_FAST_LUMA
   lowp float result = v.g;
@@ -69,7 +65,7 @@ lowp float quickPackFloats2(lowp vec2 values) {
 
 struct Quad {
   lowp vec4 scores;
-  lowp float localContrast;
+  lowp float maxEdgeContrast;
 };
 
 Quad quad(lowp vec4 values) {
@@ -82,7 +78,7 @@ Quad quad(lowp vec4 values) {
     max(abs(edges.x - edges.y), abs(edges.w - edges.z)),
     max(abs(edges.x + edges.w), abs(edges.y + edges.z))
   );
-  result.localContrast = maxOf(values) - minOf(values);
+  result.maxEdgeContrast = maxOf(abs(edges));
   return result;
 }
 
@@ -176,8 +172,8 @@ void main() {
   lowp int pattern = findPattern(quads);
 
   lowp vec4 neighborContrasts = max(
-    vec4(quads[0].localContrast),
-    vec4(quads[1].localContrast, quads[2].localContrast, quads[3].localContrast, quads[4].localContrast)
+    vec4(quads[0].maxEdgeContrast),
+    vec4(quads[1].maxEdgeContrast, quads[2].maxEdgeContrast, quads[3].maxEdgeContrast, quads[4].maxEdgeContrast)
   );
 
   lowp vec4 mainValues = vec4(l05, l06, l09, l10);
