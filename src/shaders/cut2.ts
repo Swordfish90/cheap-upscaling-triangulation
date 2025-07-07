@@ -26,17 +26,16 @@ import cut2Pass1VertexShader from './cut2/cut2_pass_1.vert.glsl?raw';
 import cut2Pass1FragmentShader from './cut2/cut2_pass_1.frag.glsl?raw';
 
 const CUT2_DEFINES = `
-  #define USE_DYNAMIC_BLEND             1
-  #define BLEND_MIN_CONTRAST_EDGE       0.00
-  #define BLEND_MAX_CONTRAST_EDGE       0.50
-  #define BLEND_MIN_SHARPNESS           0.0
-  #define BLEND_MAX_SHARPNESS           0.75
-  #define STATIC_BLEND_SHARPNESS        0.00
-  #define EDGE_USE_FAST_LUMA            0
-  #define EDGE_MIN_VALUE                0.025
-  #define HARD_EDGES_THRESHOLD          0.20
-  #define SOFT_EDGES_SHARPENING         1
-  #define SOFT_EDGES_SHARPENING_AMOUNT  1.00
+  #define USE_DYNAMIC_BLEND               1
+  #define BLEND_MIN_CONTRAST_EDGE         0.00
+  #define BLEND_MAX_CONTRAST_EDGE         0.25
+  #define BLEND_MIN_SHARPNESS             0.0
+  #define BLEND_MAX_SHARPNESS             0.75
+  #define STATIC_BLEND_SHARPNESS          0.50
+  #define EDGE_USE_FAST_LUMA              0
+  #define HARD_EDGES_SEARCH_MIN_CONTRAST  0.85
+  #define SOFT_EDGES_SHARPENING           1
+  #define SOFT_EDGES_SHARPENING_AMOUNT    1.00
 `
 
 export const CUT2_SHADERS = new Chain(

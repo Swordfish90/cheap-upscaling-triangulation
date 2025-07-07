@@ -178,7 +178,7 @@ void main() {
     quickUnpackFloats2(previousPassPixel.z + 0.001953125) - vec2(0.5)
   );
 
-  edges = clamp(edges + softEdges, min(edges, softEdges), max(edges, softEdges));
+  edges = mix(softEdges, edges, step(vec4(EPSILON), abs(edges)));
 #endif
 
   lowp int originalPattern = pattern >= 0 ? pattern : -pattern;

@@ -30,16 +30,14 @@ import cut3Pass2FragmentShader from './cut3/cut3_pass_2.frag.glsl?raw';
 const CUT3_DEFINES = `
   #define USE_DYNAMIC_BLEND               1
   #define BLEND_MIN_CONTRAST_EDGE         0.00
-  #define BLEND_MAX_CONTRAST_EDGE         0.50
+  #define BLEND_MAX_CONTRAST_EDGE         0.25
   #define BLEND_MIN_SHARPNESS             0.0
   #define BLEND_MAX_SHARPNESS             0.75
-  #define STATIC_BLEND_SHARPNESS          0.00
+  #define STATIC_BLEND_SHARPNESS          0.5
   #define EDGE_USE_FAST_LUMA              0
-  #define EDGE_MIN_VALUE                  0.025
   #define SOFT_EDGES_SHARPENING           1
   #define SOFT_EDGES_SHARPENING_AMOUNT    1.00
-  #define HARD_EDGES_THRESHOLD            0.20
-  #define HARD_EDGES_SEARCH_MIN_CONTRAST  0.50
+  #define HARD_EDGES_SEARCH_MIN_CONTRAST  0.85
   #define HARD_EDGES_SEARCH_MAX_DISTANCE  8
 `
 

@@ -1,10 +1,10 @@
 precision mediump float;
 
-varying vec2 vUv; // Receiving UV coordinates from the vertex shader
+varying vec2 vUv;
 
-uniform sampler2D tex0; // The texture sampler
+uniform sampler2D tex0;
 
 void main() {
-  vec4 color = texture2D(tex0, vUv); // Sample the texture using UV coordinates
+  vec4 color = texture2D(tex0, vUv);
   gl_FragColor = color;
 }

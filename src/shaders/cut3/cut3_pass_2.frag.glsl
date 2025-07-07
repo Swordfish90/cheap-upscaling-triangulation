@@ -136,7 +136,7 @@ lowp float adjustMidpoint(lowp float x, lowp float midPoint) {
 lowp vec3 blend(lowp vec3 a, lowp vec3 b, lowp float t, lowp float midPoint, lowp float baseSharpness) {
   lowp float sharpness = baseSharpness * sharpness(luma(a), luma(b));
   lowp float nt = adjustMidpoint(t, midPoint);
-  nt = clamp((nt - sharpness) / (1.0 - 2.0 * sharpness), 0.0 , 1.0);
+  nt = clamp((nt - sharpness) / (1.0 - 2.0 * sharpness), 0.0, 1.0);
   return mix(a, b, nt);
 }
 

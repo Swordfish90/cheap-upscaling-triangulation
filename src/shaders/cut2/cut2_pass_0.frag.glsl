@@ -65,46 +65,54 @@ lowp float quickPackFloats2(lowp vec2 values) {
 
 struct Quad {
   lowp vec4 scores;
+  lowp float maxEdgeContrast;
+  lowp float maxScore;
 };
 
 Quad quad(lowp vec4 values) {
   lowp vec4 edges = values.xyzx - values.ywwz;
 
-  Quad result;
-  result.scores = vec4(
+  lowp vec4 scores = vec4(
     abs(edges.x + edges.z),
     abs(edges.w + edges.y),
     max(abs(edges.x - edges.y), abs(edges.w - edges.z)),
     max(abs(edges.x + edges.w), abs(edges.y + edges.z))
   );
+
+  Quad result;
+  result.scores = scores;
+  result.maxScore = maxOf(scores);
+  result.maxEdgeContrast = maxOf(abs(edges));
   return result;
 }
 
-lowp int computePattern(lowp vec4 scores, lowp vec4 neighborsScores) {
+lowp int computePattern(Quad quad, lowp vec4 neighborsScores) {
+  lowp vec4 scores = quad.scores;
   lowp float maxOrthogonal = max(scores.x, scores.y);
   lowp float maxDiagonal = max(scores.z, scores.w);
 
   bool isDiagonal = maxDiagonal > maxOrthogonal;
 
-  scores += 0.25 * neighborsScores;
+  lowp vec4 adjustedScores = scores + 0.25 * neighborsScores;
 
   lowp int result = 0;
+  lowp float threshold = 1.05;
+
   if (!isDiagonal) {
-    if (scores.x > scores.y + EDGE_MIN_VALUE) {
+    if (adjustedScores.x > max(threshold * adjustedScores.y, EPSILON)) {
       result = 1;
-    } else if (scores.y > scores.x + EDGE_MIN_VALUE) {
+    } else if (adjustedScores.y > max(threshold * adjustedScores.x, EPSILON)) {
       result = 2;
     }
   } else {
-    if (scores.z > scores.w + EDGE_MIN_VALUE) {
+    if (adjustedScores.z > max(threshold * adjustedScores.w, EPSILON)) {
       result = 3;
-    } else if (scores.w > scores.z + EDGE_MIN_VALUE) {
+    } else if (adjustedScores.w > max(threshold * adjustedScores.z, EPSILON)) {
       result = 4;
     }
   }
 
-  lowp vec2 maxScores = isDiagonal ? vec2(maxOrthogonal, maxDiagonal) : vec2(maxDiagonal, maxOrthogonal);
-  if (maxScores.y <= max((1.0 + HARD_EDGES_THRESHOLD) * maxScores.x, EDGE_MIN_VALUE)) {
+  if (quad.maxScore < HARD_EDGES_SEARCH_MIN_CONTRAST * 2.0 * quad.maxEdgeContrast) {
     result = -result;
   }
 
@@ -112,7 +120,7 @@ lowp int computePattern(lowp vec4 scores, lowp vec4 neighborsScores) {
 }
 
 lowp int findPattern(Quad quad) {
-  return computePattern(quad.scores, vec4(0.0));
+  return computePattern(quad, vec4(0.0));
 }
 
 lowp int findPattern(Quad quads[5]) {
@@ -121,13 +129,14 @@ lowp int findPattern(Quad quads[5]) {
   adjustments += quads[2].scores;
   adjustments += quads[3].scores;
   adjustments += quads[4].scores;
-  return computePattern(quads[0].scores, adjustments);
+  return computePattern(quads[0], adjustments);
 }
 
 lowp float softEdgeWeight(lowp float a, lowp float b, lowp float c, lowp float d) {
   lowp float result = 0.0;
-  result += clamp((abs(b - c) / (abs(a - c) + EPSILON)), 0.0, 1.0);
-  result -= clamp((abs(c - b) / (abs(b - d) + EPSILON)), 0.0, 1.0);
+  lowp float diff = abs(b - c);
+  result += (diff / clamp(abs(a - c), diff + EPSILON, 1.0 + EPSILON));
+  result -= (diff / clamp(abs(b - d), diff + EPSILON, 1.0 + EPSILON));
   return clamp(2.0 * result, -1.0, 1.0);
 }
 
@@ -194,7 +203,7 @@ void main() {
     softEdgeWeight(l01, l05, l09, l13)
   );
 
-  edges = clamp(edges + softEdges, min(edges, softEdges), max(edges, softEdges));
+  edges = mix(softEdges, edges, step(vec4(EPSILON), abs(edges)));
 #endif
 
   pattern = findPattern(quads);
