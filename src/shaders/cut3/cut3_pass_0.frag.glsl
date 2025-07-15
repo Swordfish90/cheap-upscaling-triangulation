@@ -112,7 +112,7 @@ lowp int computePattern(Quad quad, lowp vec4 neighborsScores) {
     }
   }
 
-  if (quad.maxScore < HARD_EDGES_SEARCH_MIN_CONTRAST * 2.0 * quad.maxEdgeContrast) {
+  if (max(quad.maxScore, 0.125) < HARD_EDGES_SEARCH_MIN_CONTRAST * 2.0 * quad.maxEdgeContrast) {
     result = -result;
   }
 
@@ -194,7 +194,7 @@ void main() {
   bool opposite = any(equal(neighborPatterns, ivec4(pattern == 3 ? 4 : 3)));
   bool isTriangle = pattern >= 3;
 
-  bool reject = (isTriangle && (opposite || corner)) || !any(neighborConnections);
+  bool reject = (isTriangle && (opposite || corner));
 
   lowp vec4 result = vec4(0.0);
 
