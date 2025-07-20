@@ -194,7 +194,7 @@ void main() {
   bool opposite = any(equal(neighborPatterns, ivec4(pattern == 3 ? 4 : 3)));
   bool isTriangle = pattern >= 3;
 
-  bool reject = (isTriangle && (opposite || corner));
+  bool reject = (isTriangle && (opposite || corner)) || !any(neighborConnections);
 
   lowp vec4 result = vec4(0.0);
 

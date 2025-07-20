@@ -112,7 +112,7 @@ lowp int computePattern(Quad quad, lowp vec4 neighborsScores) {
     }
   }
 
-  if (quad.maxScore < HARD_EDGES_SEARCH_MIN_CONTRAST * 2.0 * quad.maxEdgeContrast) {
+  if (max(quad.maxScore, 0.125) < HARD_EDGES_SEARCH_MIN_CONTRAST * 2.0 * quad.maxEdgeContrast) {
     result = -result;
   }
 
