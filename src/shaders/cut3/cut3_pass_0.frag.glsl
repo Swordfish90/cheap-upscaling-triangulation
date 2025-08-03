@@ -112,7 +112,8 @@ lowp int computePattern(Quad quad, lowp vec4 neighborsScores) {
     }
   }
 
-  if (max(quad.maxScore, 0.125) < HARD_EDGES_SEARCH_MIN_CONTRAST * 2.0 * quad.maxEdgeContrast) {
+  lowp float error = 2.0 * quad.maxEdgeContrast - quad.maxScore;
+  if (error > HARD_EDGES_SEARCH_MAX_ERROR * (0.5 + 0.5 * quad.maxEdgeContrast)) {
     result = -result;
   }
 
@@ -132,6 +133,7 @@ lowp int findPattern(Quad quads[5]) {
   return computePattern(quads[0], adjustments);
 }
 
+#if SOFT_EDGES_SHARPENING_USE_LUMA
 lowp float softEdgeWeight(lowp float a, lowp float b, lowp float c, lowp float d) {
   lowp float result = 0.0;
   lowp float diff = abs(b - c);
@@ -139,6 +141,17 @@ lowp float softEdgeWeight(lowp float a, lowp float b, lowp float c, lowp float d
   result -= (diff / clamp(abs(b - d), diff + EPSILON, 1.0 + EPSILON));
   return clamp(2.0 * result, -1.0, 1.0);
 }
+#else
+lowp float softEdgeWeight(lowp vec3 a, lowp vec3 b, lowp vec3 c, lowp vec3 d) {
+  lowp vec3 bc = c - b;
+  lowp float diff = length(bc) + EPSILON;
+  lowp vec3 dir = bc / diff;
+  lowp float result = 0.0;
+  result += clamp(diff / (abs(dot(a - c, dir)) + EPSILON), 0.0, 1.0);
+  result -= clamp(diff / (abs(dot(d - b, dir)) + EPSILON), 0.0, 1.0);
+  return clamp(2.0 * result, -1.0, 1.0);
+}
+#endif
 
 void main() {
   lowp vec3 t01 = texture2D(tex0, c01).rgb;
@@ -199,12 +212,22 @@ void main() {
   lowp vec4 result = vec4(0.0);
 
 #if SOFT_EDGES_SHARPENING
+
+#if SOFT_EDGES_SHARPENING_USE_LUMA
   lowp vec4 softEdges = vec4(
     softEdgeWeight(l04, l05, l06, l07),
     softEdgeWeight(l02, l06, l10, l14),
     softEdgeWeight(l08, l09, l10, l11),
     softEdgeWeight(l01, l05, l09, l13)
   );
+#else
+  lowp vec4 softEdges = vec4(
+    softEdgeWeight(t04, t05, t06, t07),
+    softEdgeWeight(t02, t06, t10, t14),
+    softEdgeWeight(t08, t09, t10, t11),
+    softEdgeWeight(t01, t05, t09, t13)
+  );
+#endif
 
   result.y = quickPackFloats2(softEdges.xy * 0.5 + vec2(0.5));
   result.z = quickPackFloats2(softEdges.zw * 0.5 + vec2(0.5));
