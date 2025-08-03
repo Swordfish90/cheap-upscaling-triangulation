@@ -49,15 +49,15 @@ The look of every variant can be customized with a set of parameters:
 #define BLEND_MAX_SHARPNESS 1.0             // Maximum sharpness level [0, 1]
 #define STATIC_BLEND_SHARPNESS 0.5          // Sharpness level used when dynamic blending is disabled [0, 1]
 #define EDGE_USE_FAST_LUMA 0                // Use quick luma approximation in edge detection
-#define EDGE_MIN_VALUE 0.05                 // Minimum luma difference used in edge detection [0, 1]
 
 // Available in CUT2 and CUT3
 #define HARD_EDGES_THRESHOLD 0.20           // Minimum relative score threshold for an edge to be strong [0, 1]
 #define SOFT_EDGES_SHARPENING 1             // Enable soft-edges sharpening
 #define SOFT_EDGES_SHARPENING_AMOUNT 0.75   // Maximum size reduction of soft-edges pixels (antialiased pixels) [0, 1]
+#define SOFT_EDGES_SHARPENING_USE_LUMA  0   // Compute soft-edges using only the luma channel
 
 // Available in CUT3
-#define HARD_EDGES_SEARCH_MIN_CONTRAST 0.5  // Minimum relative contrast for search to include current pattern [0, 1]
+#define HARD_EDGES_SEARCH_MAX_ERROR 0.25    // Error tolerance for continuing hard edge search [0, 1]
 #define HARD_EDGES_SEARCH_MAX_DISTANCE 8    // Maximum search distance in each direction (N,E,S,W) to find a continuous edge [1, ∞[
 ```
 
