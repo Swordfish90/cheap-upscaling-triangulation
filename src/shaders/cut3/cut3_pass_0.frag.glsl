@@ -112,7 +112,8 @@ lowp int computePattern(Quad quad, lowp vec4 neighborsScores) {
     }
   }
 
-  if (max(quad.maxScore, 0.125) < HARD_EDGES_SEARCH_MIN_CONTRAST * 2.0 * quad.maxEdgeContrast) {
+  lowp float error = 2.0 * quad.maxEdgeContrast - quad.maxScore;
+  if (error > HARD_EDGES_SEARCH_MAX_ERROR * (0.5 + 0.5 * quad.maxEdgeContrast)) {
     result = -result;
   }
 
@@ -135,8 +136,8 @@ lowp int findPattern(Quad quads[5]) {
 lowp float softEdgeWeight(lowp float a, lowp float b, lowp float c, lowp float d) {
   lowp float result = 0.0;
   lowp float diff = abs(b - c);
-  result += (diff / clamp(abs(a - c), diff + EPSILON, 1.0 + EPSILON));
-  result -= (diff / clamp(abs(b - d), diff + EPSILON, 1.0 + EPSILON));
+  result += clamp(diff / (abs(a - c) + EPSILON), 0.0, 1.0);
+  result -= clamp(diff / (abs(b - d) + EPSILON), 0.0, 1.0);
   return clamp(2.0 * result, -1.0, 1.0);
 }
 

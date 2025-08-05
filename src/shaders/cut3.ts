@@ -36,9 +36,9 @@ const CUT3_DEFINES = `
   #define STATIC_BLEND_SHARPNESS          0.5
   #define EDGE_USE_FAST_LUMA              0
   #define SOFT_EDGES_SHARPENING           1
-  #define SOFT_EDGES_SHARPENING_AMOUNT    1.00
-  #define HARD_EDGES_SEARCH_MIN_CONTRAST  0.85
-  #define HARD_EDGES_SEARCH_MAX_DISTANCE  8
+  #define SOFT_EDGES_SHARPENING_AMOUNT    1.0
+  #define HARD_EDGES_SEARCH_MAX_ERROR     0.25
+  #define HARD_EDGES_SEARCH_MAX_DISTANCE  4
 `
 
 export const CUT3_SHADERS = new Chain(
